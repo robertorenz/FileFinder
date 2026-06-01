@@ -12,10 +12,10 @@ public sealed class Localization : INotifyPropertyChanged
 {
     public static Localization Instance { get; } = new();
 
-    public static IReadOnlyList<(string Code, string Name)> Languages { get; } = new[]
+    public static IReadOnlyList<LanguageOption> Languages { get; } = new[]
     {
-        ("en", "English"),
-        ("es", "Español"),
+        new LanguageOption("en", "English"),
+        new LanguageOption("es", "Español"),
     };
 
     private string _lang = "en";
@@ -45,4 +45,12 @@ public sealed class Localization : INotifyPropertyChanged
     public string Format(string key, params object[] args) => string.Format(this[key], args);
 
     public event PropertyChangedEventHandler? PropertyChanged;
+}
+
+/// <summary>A selectable UI language. Uses real properties so WPF can bind to them.</summary>
+public sealed class LanguageOption
+{
+    public string Code { get; }
+    public string Name { get; }
+    public LanguageOption(string code, string name) { Code = code; Name = name; }
 }

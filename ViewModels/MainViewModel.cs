@@ -76,7 +76,8 @@ public sealed class MainViewModel : ObservableObject
     {
         var engine = _engine;
         string lang = _settings.Language;
-        if (PreferencesDialog.Show(Application.Current.MainWindow, ref engine, MasmAvailable, ref lang))
+        var (saved, benchmark) = PreferencesDialog.Show(Application.Current.MainWindow, ref engine, MasmAvailable, ref lang);
+        if (saved)
         {
             _settings.DefaultEngine = engine;
             _settings.Language = lang;
@@ -90,6 +91,8 @@ public sealed class MainViewModel : ObservableObject
                 OnPropertyChanged(nameof(EngineIsMasm));
                 if (!string.IsNullOrEmpty(Query)) ScheduleSearch();
             }
+
+            if (benchmark) _ = RunBenchmarkAsync();
         }
     }
 

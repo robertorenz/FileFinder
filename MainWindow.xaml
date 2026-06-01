@@ -96,25 +96,6 @@
                             Command="{Binding ClearIndexCommand}" Height="34" Margin="0,8,0,0"/>
                 </StackPanel>
 
-                <!-- Search engine selector (sits just above the action buttons) -->
-                <Border DockPanel.Dock="Bottom" Margin="22,8,22,8" CornerRadius="7" Padding="12,10"
-                        Background="{StaticResource SidebarDeepBrush}">
-                    <StackPanel>
-                        <TextBlock Text="{l:Loc SearchEngineHeader}" FontSize="11" FontWeight="SemiBold"
-                                   Foreground="#64748B" Margin="0,0,0,8"/>
-                        <RadioButton GroupName="engine" Content="{l:Loc EngineJit}"
-                                     IsChecked="{Binding EngineIsJit}" Foreground="#E2E8F0"
-                                     FontSize="12.5" Margin="0,2"/>
-                        <RadioButton GroupName="engine" Content="{l:Loc EngineMasm}"
-                                     IsChecked="{Binding EngineIsMasm}" IsEnabled="{Binding MasmAvailable}"
-                                     Foreground="#E2E8F0" FontSize="12.5" Margin="0,2"/>
-                        <TextBlock Text="{Binding EngineStatusText}" Foreground="#64748B"
-                                   FontSize="10.5" Margin="0,6,0,8" TextWrapping="Wrap"/>
-                        <Button Content="{l:Loc BenchmarkButton}" Style="{StaticResource GhostButton}"
-                                Command="{Binding BenchmarkCommand}" Height="34"/>
-                    </StackPanel>
-                </Border>
-
                 <!-- Drive list -->
                 <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="14,0,14,0">
                     <ItemsControl ItemsSource="{Binding Drives}" Margin="8,0">

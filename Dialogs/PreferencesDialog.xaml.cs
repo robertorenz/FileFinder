@@ -13,6 +13,7 @@ public partial class PreferencesDialog : Window
 
     public SearchEngine SelectedEngine { get; private set; }
     public string SelectedLanguage { get; private set; }
+    public bool BenchmarkRequested { get; private set; }
 
     private PreferencesDialog(SearchEngine engine, bool masmAvailable, string language)
     {
@@ -32,8 +33,12 @@ public partial class PreferencesDialog : Window
         _initialized = true;
     }
 
-    /// <summary>Shows the dialog. Returns true if the user saved.</summary>
-    public static bool Show(Window? owner, ref SearchEngine engine, bool masmAvailable, ref string language)
+    /// <summary>
+    /// Shows the dialog. Returns whether the user saved, and whether they asked
+    /// to run the benchmark (which also applies the current selections).
+    /// </summary>
+    public static (bool Saved, bool Benchmark) Show(Window? owner, ref SearchEngine engine,
+        bool masmAvailable, ref string language)
     {
         var d = new PreferencesDialog(engine, masmAvailable, language)
         {
@@ -45,7 +50,21 @@ public partial class PreferencesDialog : Window
             engine = d.SelectedEngine;
             language = d.SelectedLanguage;
         }
-        return saved;
+        return (saved, d.BenchmarkRequested);
+    }
+
+    private void Apply()
+    {
+        SelectedEngine = MasmRadio.IsChecked == true ? SearchEngine.Masm : SearchEngine.Jit;
+        SelectedLanguage = LanguageCombo.SelectedValue as string ?? "en";
+    }
+
+    private void Benchmark_Click(object sender, RoutedEventArgs e)
+    {
+        Apply();
+        BenchmarkRequested = true;
+        DialogResult = true;
+        Close();
     }
 
     // Preview the language live as the user picks it.
@@ -58,8 +77,7 @@ public partial class PreferencesDialog : Window
 
     private void Save_Click(object sender, RoutedEventArgs e)
     {
-        SelectedEngine = MasmRadio.IsChecked == true ? SearchEngine.Masm : SearchEngine.Jit;
-        SelectedLanguage = LanguageCombo.SelectedValue as string ?? "en";
+        Apply();
         DialogResult = true;
         Close();
     }
