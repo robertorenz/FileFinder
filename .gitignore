@@ -4,3 +4,9 @@ obj/
 .vs/
 *.ffix
 selftest.out
+
+# native build artifacts (the .asm source IS committed; binaries are not)
+native/*.dll
+native/*.obj
+native/*.lib
+native/*.exp

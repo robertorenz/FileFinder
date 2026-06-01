@@ -12,7 +12,7 @@ milliseconds.
 
 Grab the latest build from the [**Releases**](https://github.com/robertorenz/FileFinder/releases/latest) page:
 
-- **`FileFinder-Setup-1.0.2.exe`** — installer (Start Menu + optional desktop shortcut, uninstaller). Installs per-user without admin, or all-users with admin.
+- **`FileFinder-Setup-1.0.3.exe`** — installer (Start Menu + optional desktop shortcut, uninstaller). Installs per-user without admin, or all-users with admin.
 - **`FileFinder.exe`** — portable single file. No install, no .NET runtime required — just download and run.
 
 ## Highlights
@@ -41,6 +41,26 @@ Grab the latest build from the [**Releases**](https://github.com/robertorenz/Fil
 - **Professional UI** — clean slate/blue theme, live result count and timing,
   double-click to open, right-click to reveal in Explorer. Modal dialogs (no
   system alert boxes).
+
+## Two search engines (benchmark them yourself)
+
+The substring search ships in **two interchangeable implementations** so you can
+measure the difference on your own machine:
+
+| Engine | Where | What it is |
+|--------|-------|------------|
+| **JIT** | `Core/SimdSearch.cs` | C# `System.Runtime.Intrinsics` (AVX2). The JIT lowers it to `vpcmpeqb`/`vpmovmskb`/`tzcnt`. |
+| **MASM** | `native/search_asm.asm` → `FileFinderAsm.dll` | A hand-written x64 assembly routine, assembled with `ml64.exe` and P/Invoked. |
+
+Pick the engine in the sidebar (**Search Engine**), or race them with
+**View → Benchmark JIT vs MASM…** (`Ctrl+B`). The benchmark runs the current
+search term through both engines 40× across all cores and reports the best time
+for each. Both are verified to return identical results in the `--selftest`.
+
+> Building the MASM DLL needs the MSVC C++ tools (the *Desktop development with
+> C++* workload). If they're absent the app still builds and runs — it just uses
+> the JIT engine and the MASM option is disabled. Build it manually with
+> `pwsh native\build_asm.ps1`.
 
 ## Why it's fast
 

@@ -19,7 +19,30 @@
     <ServerGarbageCollection>true</ServerGarbageCollection>
     <ConcurrentGarbageCollection>true</ConcurrentGarbageCollection>
 
-    <Version>1.0.2</Version>
+    <Version>1.0.3</Version>
   </PropertyGroup>
+
+  <!-- Bundle the MASM DLL (if present) next to the exe and into single-file publish -->
+  <ItemGroup>
+    <None Include="native\FileFinderAsm.dll" Condition="Exists('native\FileFinderAsm.dll')">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>FileFinderAsm.dll</Link>
+    </None>
+  </ItemGroup>
+
+  <!-- Assemble native/search_asm.asm into FileFinderAsm.dll using MASM, if the
+       MSVC C++ tools are installed. Non-fatal if the toolchain is absent: the
+       app just runs without the MASM engine and uses the JIT engine. -->
+  <Target Name="BuildNativeAsm" BeforeTargets="BeforeBuild">
+    <Exec Command="pwsh -NoProfile -ExecutionPolicy Bypass -File &quot;$(MSBuildProjectDirectory)\native\build_asm.ps1&quot;"
+          ContinueOnError="true" />
+  </Target>
+
+  <!-- Ensure the freshly built DLL is in the output folder for run/debug -->
+  <Target Name="CopyNativeAsm" AfterTargets="Build"
+          Condition="Exists('native\FileFinderAsm.dll')">
+    <Copy SourceFiles="native\FileFinderAsm.dll" DestinationFolder="$(TargetDir)"
+          SkipUnchangedFiles="true" />
+  </Target>
 
 </Project>

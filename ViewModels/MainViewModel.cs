@@ -31,6 +31,7 @@ public sealed class MainViewModel : ObservableObject
     public RelayCommand ShowStatisticsCommand { get; }
     public RelayCommand OpenCacheFolderCommand { get; }
     public RelayCommand AboutCommand { get; }
+    public RelayCommand BenchmarkCommand { get; }
 
     public MainViewModel()
     {
@@ -44,6 +45,7 @@ public sealed class MainViewModel : ObservableObject
             StatisticsDialog.Show(Application.Current.MainWindow, _index, IndexCache.IndexPath));
         OpenCacheFolderCommand = new RelayCommand(_ => OpenCacheFolder());
         AboutCommand = new RelayCommand(_ => ShowAbout());
+        BenchmarkCommand = new RelayCommand(_ => _ = RunBenchmarkAsync(), _ => !IsIndexing);
 
         LoadDrives();
         _ = LoadCachedIndexAsync();
@@ -81,6 +83,34 @@ public sealed class MainViewModel : ObservableObject
     }
 
     public bool IsElevated { get; } = DriveIndexer.IsElevated();
+
+    // ---- search engine selection ----
+    public bool MasmAvailable { get; } = NativeSearch.IsAvailable;
+
+    public string EngineStatusText => MasmAvailable
+        ? "MASM engine ready (FileFinderAsm.dll)"
+        : "MASM engine unavailable — JIT only";
+
+    private SearchEngine _engine = SearchEngine.Jit;
+
+    public bool EngineIsJit
+    {
+        get => _engine == SearchEngine.Jit;
+        set { if (value && _engine != SearchEngine.Jit) { _engine = SearchEngine.Jit; OnEngineChanged(); } }
+    }
+
+    public bool EngineIsMasm
+    {
+        get => _engine == SearchEngine.Masm;
+        set { if (value && _engine != SearchEngine.Masm) { _engine = SearchEngine.Masm; OnEngineChanged(); } }
+    }
+
+    private void OnEngineChanged()
+    {
+        OnPropertyChanged(nameof(EngineIsJit));
+        OnPropertyChanged(nameof(EngineIsMasm));
+        if (!string.IsNullOrEmpty(Query)) ScheduleSearch();
+    }
 
     public string AdminStatusText => IsElevated
         ? "Administrator — fast MFT indexing available"
@@ -245,8 +275,9 @@ public sealed class MainViewModel : ObservableObject
             return;
         }
 
+        var engine = _engine;
         var sw = Stopwatch.StartNew();
-        var (hits, total) = await Task.Run(() => index.Search(query, ResultLimit), ct);
+        var (hits, total) = await Task.Run(() => index.Search(query, ResultLimit, engine), ct);
         if (ct.IsCancellationRequested) return;
 
         var rows = new List<FileRow>(hits.Count);
@@ -267,9 +298,91 @@ public sealed class MainViewModel : ObservableObject
         Results.Clear();
         foreach (var r in rows) Results.Add(r);
 
+        string eng = engine == SearchEngine.Masm && MasmAvailable ? "MASM" : "JIT";
         ResultCountText = total > ResultLimit
-            ? $"{total:N0} matches (showing first {ResultLimit:N0}) · {sw.Elapsed.TotalMilliseconds:0} ms"
-            : $"{total:N0} match{(total == 1 ? "" : "es")} · {sw.Elapsed.TotalMilliseconds:0} ms";
+            ? $"{total:N0} matches (showing first {ResultLimit:N0}) · {sw.Elapsed.TotalMilliseconds:0} ms · {eng}"
+            : $"{total:N0} match{(total == 1 ? "" : "es")} · {sw.Elapsed.TotalMilliseconds:0} ms · {eng}";
+    }
+
+    // ---------------- benchmark ----------------
+
+    private async Task RunBenchmarkAsync()
+    {
+        var index = _index;
+        if (index == null)
+        {
+            ModalDialog.Show(Application.Current.MainWindow, "Benchmark",
+                "Build or load an index first, then run the benchmark.");
+            return;
+        }
+
+        string q = Query;
+        if (string.IsNullOrWhiteSpace(q))
+        {
+            ModalDialog.Show(Application.Current.MainWindow, "Benchmark",
+                "Type a search term first, then run the benchmark.\n\n" +
+                "Tip: use plain text (no * or ?) — the MASM engine compares against the JIT engine on substring searches.");
+            return;
+        }
+        if (WildcardMatcher.HasWildcard(q))
+        {
+            ModalDialog.Show(Application.Current.MainWindow, "Benchmark",
+                "Wildcard queries always use the JIT engine, so there's nothing to compare.\n\n" +
+                "Use a plain text term (no * or ?) to race the JIT and MASM engines.");
+            return;
+        }
+
+        StatusText = "Benchmarking engines…";
+        var (jitMs, masmMs, total) = await Task.Run(() =>
+        {
+            const int iters = 40;
+            int t = index.Search(q, ResultLimit, SearchEngine.Jit).total;
+            double j = BestOf(() => index.Search(q, ResultLimit, SearchEngine.Jit), iters);
+            double m = MasmAvailable ? BestOf(() => index.Search(q, ResultLimit, SearchEngine.Masm), iters) : -1;
+            return (j, m, t);
+        });
+        StatusText = "Index ready. Start typing to search.";
+
+        string msg =
+            $"Search term:  \"{q}\"\n" +
+            $"Names scanned:  {index.Count:N0}\n" +
+            $"Matches:  {total:N0}\n\n" +
+            $"JIT  (C# AVX2 intrinsics):     {jitMs:0.000} ms\n";
+
+        if (masmMs >= 0)
+        {
+            msg += $"MASM (hand-written .asm DLL):  {masmMs:0.000} ms\n\n";
+            if (masmMs > 0 && jitMs > 0)
+            {
+                double ratio = jitMs / masmMs;
+                msg += ratio >= 1.0
+                    ? $"→ MASM is {ratio:0.0}× faster"
+                    : $"→ JIT is {1.0 / ratio:0.0}× faster";
+            }
+        }
+        else
+        {
+            msg += "MASM: unavailable (FileFinderAsm.dll not loaded)\n";
+        }
+        msg += "\n(best of 40 runs, all CPU cores)";
+
+        ModalDialog.Show(Application.Current.MainWindow, "Engine Benchmark", msg);
+    }
+
+    private static double BestOf(Func<(List<int>, int)> action, int iters)
+    {
+        action(); // warm up
+        double best = double.MaxValue;
+        var sw = new Stopwatch();
+        for (int i = 0; i < iters; i++)
+        {
+            sw.Restart();
+            action();
+            sw.Stop();
+            double ms = sw.Elapsed.TotalMilliseconds;
+            if (ms < best) best = ms;
+        }
+        return best;
     }
 
     // ---------------- file actions ----------------

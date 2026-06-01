@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
@@ -108,9 +109,47 @@ internal static class SelfTest
         Check($"SIMD == naive on 200k ({simd.total} == {naive})", simd.total == naive);
         Console.WriteLine($"  ...searched {bigIndex.Count:N0} names in {sw.Elapsed.TotalMilliseconds:0.0} ms");
 
+        // ---- MASM engine: correctness vs JIT + head-to-head timing ----
+        Console.WriteLine();
+        if (NativeSearch.IsAvailable)
+        {
+            var jit = bigIndex.Search("data_42", int.MaxValue, SearchEngine.Jit);
+            var asm = bigIndex.Search("data_42", int.MaxValue, SearchEngine.Masm);
+            Check($"MASM total == JIT total ({asm.total} == {jit.total})", asm.total == jit.total);
+            Check("MASM hit set == JIT hit set",
+                new HashSet<int>(asm.hits).SetEquals(new HashSet<int>(jit.hits)));
+
+            double jitMs = BestOf(() => bigIndex.Search("data_42", int.MaxValue, SearchEngine.Jit), 50);
+            double asmMs = BestOf(() => bigIndex.Search("data_42", int.MaxValue, SearchEngine.Masm), 50);
+            Console.WriteLine($"  Benchmark over {bigIndex.Count:N0} names (best of 50):");
+            Console.WriteLine($"    JIT  (AVX2 intrinsics): {jitMs:0.000} ms");
+            Console.WriteLine($"    MASM (FileFinderAsm.dll): {asmMs:0.000} ms");
+        }
+        else
+        {
+            Console.WriteLine("  MASM engine: NOT available (FileFinderAsm.dll missing) — skipped.");
+        }
+
         Console.WriteLine();
         Console.WriteLine(failures == 0 ? "ALL TESTS PASSED" : $"{failures} TEST(S) FAILED");
         Console.WriteLine();
         return failures == 0 ? 0 : 1;
+    }
+
+    /// <summary>Runs <paramref name="action"/> <paramref name="iters"/> times and returns the fastest in ms.</summary>
+    private static double BestOf(Action action, int iters)
+    {
+        action(); // warm up
+        double best = double.MaxValue;
+        var sw = new Stopwatch();
+        for (int i = 0; i < iters; i++)
+        {
+            sw.Restart();
+            action();
+            sw.Stop();
+            double ms = sw.Elapsed.TotalMilliseconds;
+            if (ms < best) best = ms;
+        }
+        return best;
     }
 }

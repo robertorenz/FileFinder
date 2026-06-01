@@ -113,7 +113,8 @@ public sealed class FileIndex
     /// the matching record indices (capped at <paramref name="limit"/>) plus the
     /// true total number of matches.
     /// </summary>
-    public unsafe (List<int> hits, int total) Search(string query, int limit)
+    public unsafe (List<int> hits, int total) Search(string query, int limit,
+        SearchEngine engine = SearchEngine.Jit)
     {
         if (string.IsNullOrEmpty(query))
             return (new List<int>(), 0);
@@ -121,6 +122,15 @@ public sealed class FileIndex
         byte[] needle = Encoding.UTF8.GetBytes(query.ToLowerInvariant());
         bool glob = WildcardMatcher.HasWildcard(query);
 
+        // The MASM engine does plain substring only; globs always use the JIT path.
+        if (engine == SearchEngine.Masm && !glob && NativeSearch.IsAvailable)
+            return SearchMasm(needle, limit);
+
+        return SearchManaged(needle, glob, limit);
+    }
+
+    private unsafe (List<int> hits, int total) SearchManaged(byte[] needle, bool glob, int limit)
+    {
         int partitions = Math.Max(1, Environment.ProcessorCount);
         var local = new List<int>[partitions];
         var counts = new int[partitions];
@@ -154,6 +164,56 @@ public sealed class FileIndex
             local[pIdx] = list;
         });
 
+        return Merge(local, counts, partitions, limit);
+    }
+
+    private unsafe (List<int> hits, int total) SearchMasm(byte[] needle, int limit)
+    {
+        int partitions = Math.Max(1, Environment.ProcessorCount);
+        var local = new List<int>[partitions];
+        var counts = new int[partitions];
+        int n = Count;
+
+        Parallel.For(0, partitions, pIdx =>
+        {
+            int from = (int)((long)n * pIdx / partitions);
+            int to = (int)((long)n * (pIdx + 1) / partitions);
+            // At most (to-from) hits in this partition, and never more than `limit`.
+            int cap = Math.Min(limit, to - from);
+            var buf = new int[cap > 0 ? cap : 1];
+
+            fixed (byte* blob = _lowerBytes)
+            fixed (byte* nd = needle)
+            fixed (int* off = _lowerOff)
+            fixed (int* hb = buf)
+            {
+                int written = 0;
+                var args = new NativeSearch.SearchArgs
+                {
+                    Blob = (IntPtr)blob,
+                    Offs = (IntPtr)off,
+                    Needle = (IntPtr)nd,
+                    Nlen = needle.Length,
+                    From = from,
+                    To = to,
+                    MaxHits = cap,
+                    OutHits = (IntPtr)hb,
+                    OutCount = (IntPtr)(&written)
+                };
+                long partTotal = NativeSearch.asm_search_range(ref args);
+                counts[pIdx] = (int)partTotal;
+
+                var list = new List<int>(written);
+                for (int k = 0; k < written; k++) list.Add(buf[k]);
+                local[pIdx] = list;
+            }
+        });
+
+        return Merge(local, counts, partitions, limit);
+    }
+
+    private static (List<int> hits, int total) Merge(List<int>[] local, int[] counts, int partitions, int limit)
+    {
         int total = 0;
         for (int p = 0; p < partitions; p++) total += counts[p];
 
