@@ -148,8 +148,14 @@
                         <MenuItem Header="{l:Loc CtxOpenWith}"
                                   Command="{Binding Data.OpenWithCommand, Source={StaticResource proxy}}"
                                   CommandParameter="{Binding}"/>
+                        <MenuItem Header="{l:Loc CtxRunAsAdmin}"
+                                  Command="{Binding Data.RunAsAdminCommand, Source={StaticResource proxy}}"
+                                  CommandParameter="{Binding}"/>
                         <MenuItem Header="{l:Loc CtxOpenFolder}"
                                   Command="{Binding Data.OpenFolderCommand, Source={StaticResource proxy}}"
+                                  CommandParameter="{Binding}"/>
+                        <MenuItem Header="{l:Loc CtxOpenInTerminal}"
+                                  Command="{Binding Data.OpenInTerminalCommand, Source={StaticResource proxy}}"
                                   CommandParameter="{Binding}"/>
                         <Separator/>
                         <MenuItem Header="{l:Loc CtxCopy}">
@@ -168,8 +174,18 @@
                             <MenuItem Header="{l:Loc CtxCopyNameNoExt}"
                                       Command="{Binding Data.CopyNameNoExtCommand, Source={StaticResource proxy}}"
                                       CommandParameter="{Binding}"/>
+                            <Separator/>
+                            <MenuItem Header="{l:Loc CtxCopySize}"
+                                      Command="{Binding Data.CopySizeCommand, Source={StaticResource proxy}}"
+                                      CommandParameter="{Binding}"/>
+                            <MenuItem Header="{l:Loc CtxCopyDate}"
+                                      Command="{Binding Data.CopyDateCommand, Source={StaticResource proxy}}"
+                                      CommandParameter="{Binding}"/>
                         </MenuItem>
                         <Separator/>
+                        <MenuItem Header="{l:Loc CtxFindByType}"
+                                  Command="{Binding Data.FindByTypeCommand, Source={StaticResource proxy}}"
+                                  CommandParameter="{Binding}"/>
                         <MenuItem Header="{l:Loc CtxProperties}"
                                   Command="{Binding Data.PropertiesCommand, Source={StaticResource proxy}}"
                                   CommandParameter="{Binding}"/>

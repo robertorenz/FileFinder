@@ -55,6 +55,11 @@ internal static class Strings
         ["CtxCopyFolderPath"] = "Folder path",
         ["CtxCopyFileName"] = "File name",
         ["CtxCopyNameNoExt"] = "Name without extension",
+        ["CtxCopySize"] = "Size",
+        ["CtxCopyDate"] = "Date modified",
+        ["CtxRunAsAdmin"] = "Run as administrator",
+        ["CtxOpenInTerminal"] = "Open in Terminal here",
+        ["CtxFindByType"] = "Find other files of this type",
         ["CtxProperties"] = "Properties",
 
         // Status bar / summaries
@@ -202,6 +207,11 @@ internal static class Strings
         ["CtxCopyFolderPath"] = "Ruta de la carpeta",
         ["CtxCopyFileName"] = "Nombre del archivo",
         ["CtxCopyNameNoExt"] = "Nombre sin extensión",
+        ["CtxCopySize"] = "Tamaño",
+        ["CtxCopyDate"] = "Fecha de modificación",
+        ["CtxRunAsAdmin"] = "Ejecutar como administrador",
+        ["CtxOpenInTerminal"] = "Abrir en Terminal aquí",
+        ["CtxFindByType"] = "Buscar otros archivos de este tipo",
         ["CtxProperties"] = "Propiedades",
 
         // Status bar / summaries

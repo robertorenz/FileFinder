@@ -38,6 +38,11 @@ public sealed class MainViewModel : ObservableObject
     public RelayCommand CopyFolderPathCommand { get; }
     public RelayCommand CopyFileNameCommand { get; }
     public RelayCommand CopyNameNoExtCommand { get; }
+    public RelayCommand CopySizeCommand { get; }
+    public RelayCommand CopyDateCommand { get; }
+    public RelayCommand RunAsAdminCommand { get; }
+    public RelayCommand OpenInTerminalCommand { get; }
+    public RelayCommand FindByTypeCommand { get; }
     public RelayCommand PropertiesCommand { get; }
     public RelayCommand ClearIndexCommand { get; }
     public RelayCommand ShowStatisticsCommand { get; }
@@ -65,6 +70,11 @@ public sealed class MainViewModel : ObservableObject
         CopyFileNameCommand = new RelayCommand(p => CopyText((p as FileRow)?.Name));
         CopyNameNoExtCommand = new RelayCommand(p =>
             CopyText(p is FileRow r ? Path.GetFileNameWithoutExtension(r.Name) : null));
+        CopySizeCommand = new RelayCommand(p => { if (p is FileRow r) { r.LoadMetadata(); CopyText(r.SizeText); } });
+        CopyDateCommand = new RelayCommand(p => { if (p is FileRow r) { r.LoadMetadata(); CopyText(r.ModifiedText); } });
+        RunAsAdminCommand = new RelayCommand(RunAsAdmin);
+        OpenInTerminalCommand = new RelayCommand(OpenInTerminal);
+        FindByTypeCommand = new RelayCommand(FindByType);
         PropertiesCommand = new RelayCommand(ShowProperties);
         ClearIndexCommand = new RelayCommand(_ => ClearIndex(), _ => _index != null && !IsIndexing);
         ShowStatisticsCommand = new RelayCommand(_ =>
@@ -566,6 +576,39 @@ public sealed class MainViewModel : ObservableObject
         {
             ModalDialog.Show(Application.Current.MainWindow, L("CannotOpenFile"), ex.Message);
         }
+    }
+
+    private void RunAsAdmin(object? param)
+    {
+        if (param is not FileRow row) return;
+        try { Process.Start(new ProcessStartInfo(row.FullPath) { UseShellExecute = true, Verb = "runas" }); }
+        catch (System.ComponentModel.Win32Exception w) when (w.NativeErrorCode == 1223) { /* user declined UAC */ }
+        catch (Exception ex)
+        {
+            ModalDialog.Show(Application.Current.MainWindow, L("CannotOpenFile"), ex.Message);
+        }
+    }
+
+    private void OpenInTerminal(object? param)
+    {
+        if (param is not FileRow row) return;
+        string dir = row.Directory;
+        try { Process.Start(new ProcessStartInfo("wt.exe") { UseShellExecute = true, Arguments = $"-d \"{dir}\"" }); }
+        catch
+        {
+            try { Process.Start(new ProcessStartInfo("powershell.exe") { UseShellExecute = true, WorkingDirectory = dir }); }
+            catch (Exception ex)
+            {
+                ModalDialog.Show(Application.Current.MainWindow, L("CannotOpenFolder"), ex.Message);
+            }
+        }
+    }
+
+    private void FindByType(object? param)
+    {
+        if (param is not FileRow row) return;
+        string ext = Path.GetExtension(row.Name);
+        Query = string.IsNullOrEmpty(ext) ? row.Name : "*" + ext; // setter triggers the search
     }
 
     private void CopyFileToClipboard(object? param)
