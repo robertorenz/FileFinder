@@ -6,7 +6,7 @@ AVX2 hardware intrinsics — the same vectorized machine instructions you'd
 hand-write in assembly — so it scans millions of file names in a few
 milliseconds.
 
-![status](https://img.shields.io/badge/build-passing-16A34A) ![dotnet](https://img.shields.io/badge/.NET-9.0-2563EB)
+![status](https://img.shields.io/badge/build-passing-16A34A) ![dotnet](https://img.shields.io/badge/.NET-9.0-2563EB) ![license](https://img.shields.io/badge/license-MIT-64748B)
 
 ## Download
 
@@ -148,6 +148,10 @@ hand-written assembly lives in the **search** path, not the indexer.
 - Windows 10/11, .NET 9 SDK/runtime
 - A CPU with AVX2 (virtually all since ~2013); a scalar fallback runs otherwise
 - Administrator rights are **optional** — only needed for the fast MFT path
+
+## License
+
+[MIT](LICENSE) © 2026 Roberto Renz
 
 ---
 Built with C# / WPF on .NET 9.
