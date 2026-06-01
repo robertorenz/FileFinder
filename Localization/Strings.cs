@@ -23,6 +23,7 @@ internal static class Strings
         ["MenuHelp"] = "_Help",
         ["MenuDocumentation"] = "Documentation",
         ["DocsOpenInBrowser"] = "Open in browser",
+        ["DocsOverview"] = "Overview",
         ["MenuAbout"] = "About FileFinder",
 
         // Sidebar
@@ -177,6 +178,7 @@ internal static class Strings
         ["MenuHelp"] = "A_yuda",
         ["MenuDocumentation"] = "Documentación",
         ["DocsOpenInBrowser"] = "Abrir en el navegador",
+        ["DocsOverview"] = "Resumen",
         ["MenuAbout"] = "Acerca de FileFinder",
 
         // Sidebar

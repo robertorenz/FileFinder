@@ -2,11 +2,14 @@ using System.Diagnostics;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
+using Loc = FileFinder.Localization.Localization;
 
 namespace FileFinder.Dialogs;
 
 public partial class DocumentationDialog : Window
 {
+    private const string BaseUrl = "https://github.com/robertorenz/FileFinder/blob/main/";
+
     private sealed class Section
     {
         public required string Title { get; init; }
@@ -16,34 +19,31 @@ public partial class DocumentationDialog : Window
 
     private readonly string _browserUrl;
 
-    private DocumentationDialog(string browserUrl)
+    private DocumentationDialog()
     {
         InitializeComponent();
-        _browserUrl = browserUrl;
-        LoadSections();
+        string lang = Loc.Instance.CurrentLanguage;
+        _browserUrl = BaseUrl + (lang == "es" ? "DOCS.es.md" : "DOCS.md");
+
+        var sections = SplitIntoSections(LoadDocsText(lang));
+        SectionList.ItemsSource = sections;
+        if (sections.Count > 0) SectionList.SelectedIndex = 0;
     }
 
-    public static void Show(Window? owner, string browserUrl)
+    public static void Show(Window? owner)
     {
-        new DocumentationDialog(browserUrl)
+        new DocumentationDialog
         {
             Owner = owner ?? Application.Current?.MainWindow
         }.ShowDialog();
     }
 
-    private void LoadSections()
+    private static string LoadDocsText(string lang)
     {
-        string md = LoadDocsText();
-        var sections = SplitIntoSections(md);
-        SectionList.ItemsSource = sections;
-        if (sections.Count > 0) SectionList.SelectedIndex = 0;
-    }
-
-    private static string LoadDocsText()
-    {
+        string resource = lang == "es" ? "DOCS.es.md" : "DOCS.md";
         try
         {
-            var uri = new Uri("pack://application:,,,/DOCS.md");
+            var uri = new Uri($"pack://application:,,,/{resource}");
             using var stream = Application.GetResourceStream(uri)!.Stream;
             using var reader = new StreamReader(stream);
             return reader.ReadToEnd();
@@ -85,19 +85,19 @@ public partial class DocumentationDialog : Window
         }
 
         if (intro.Exists(l => l.Trim().Length > 0))
-            sections.Insert(0, new Section { Title = "Overview", Lines = intro });
+            sections.Insert(0, new Section { Title = Loc.Instance["DocsOverview"], Lines = intro });
 
         return sections;
     }
 
-    /// <summary>Test hook: load DOCS.md, split, and render every section. Returns total blocks.</summary>
+    /// <summary>Test hook: load each language, split, and render every section. Returns total blocks.</summary>
     internal static int RenderAllSectionsForTest()
     {
-        var sections = SplitIntoSections(LoadDocsText());
         int blocks = 0;
-        foreach (var s in sections)
-            blocks += MarkdownFlow.ToFlowDocument(s.Lines).Blocks.Count;
-        return sections.Count == 0 ? 0 : blocks;
+        foreach (string lang in new[] { "en", "es" })
+            foreach (var s in SplitIntoSections(LoadDocsText(lang)))
+                blocks += MarkdownFlow.ToFlowDocument(s.Lines).Blocks.Count;
+        return blocks;
     }
 
     private void SectionList_SelectionChanged(object sender, SelectionChangedEventArgs e)

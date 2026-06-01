@@ -52,8 +52,6 @@ public sealed class MainViewModel : ObservableObject
     public RelayCommand PreferencesCommand { get; }
     public RelayCommand DocumentationCommand { get; }
 
-    private const string DocsUrl = "https://github.com/robertorenz/FileFinder/blob/main/DOCS.md";
-
     public MainViewModel()
     {
         _settings = AppSettings.Load();
@@ -87,7 +85,7 @@ public sealed class MainViewModel : ObservableObject
         BenchmarkCommand = new RelayCommand(_ => _ = RunBenchmarkAsync(), _ => !IsIndexing);
         PreferencesCommand = new RelayCommand(_ => ShowPreferences());
         DocumentationCommand = new RelayCommand(_ =>
-            DocumentationDialog.Show(Application.Current.MainWindow, DocsUrl));
+            DocumentationDialog.Show(Application.Current.MainWindow));
 
         _statusText = L("Ready");
         _indexSummary = L("NoIndexYet");
