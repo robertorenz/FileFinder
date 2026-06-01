@@ -110,7 +110,7 @@ public sealed class MainViewModel : ObservableObject
         {
             case PrefResult.Build: _ = BuildIndexAsync(); break;
             case PrefResult.Benchmark: _ = RunBenchmarkAsync(); break;
-            default: if (!string.IsNullOrEmpty(Query)) ScheduleSearch(); break; // refresh metadata
+            default: ScheduleSearch(); break; // refresh listing/metadata (incl. empty query)
         }
     }
 
@@ -269,6 +269,7 @@ public sealed class MainViewModel : ObservableObject
                 idx.BuiltUtc.ToLocalTime().ToString("g"));
             StatusText = L("IndexReady");
             RaiseCommands();
+            ScheduleSearch(); // show all files immediately (empty query)
         }
         else
         {
@@ -312,8 +313,7 @@ public sealed class MainViewModel : ObservableObject
             IndexSummary = LF("IndexedSummary", _index.Count.ToString("N0"), drives,
                 sw.Elapsed.TotalSeconds.ToString("0.0"));
             StatusText = L("IndexReady");
-
-            if (!string.IsNullOrEmpty(Query)) ScheduleSearch();
+            ScheduleSearch(); // show all files (or current query) once indexed
         }
         catch (OperationCanceledException)
         {
@@ -370,20 +370,29 @@ public sealed class MainViewModel : ObservableObject
             ResultCountText = _query.Length > 0 ? L("BuildFirst") : "";
             return;
         }
-        if (string.IsNullOrEmpty(query))
-        {
-            Results.Clear();
-            ResultCountText = "";
-            return;
-        }
 
         var engine = _engine;
+        bool empty = string.IsNullOrEmpty(query);
         bool loadMeta = _settings.ShowSize || _settings.ShowModified || _settings.ShowAttributes;
         var sw = Stopwatch.StartNew();
 
         var (rows, total) = await Task.Run(() =>
         {
-            var (hits, tot) = index.Search(query, ResultLimit, engine);
+            List<int> hits;
+            int tot;
+            if (empty)
+            {
+                // No query: list every file (capped at the display limit).
+                tot = index.Count;
+                int take = Math.Min(index.Count, ResultLimit);
+                hits = new List<int>(take);
+                for (int i = 0; i < take; i++) hits.Add(i);
+            }
+            else
+            {
+                (hits, tot) = index.Search(query, ResultLimit, engine);
+            }
+
             var list = new List<FileRow>(hits.Count);
             foreach (int i in hits)
             {
@@ -406,11 +415,20 @@ public sealed class MainViewModel : ObservableObject
         Results.Clear();
         foreach (var r in rows) Results.Add(r);
 
-        string eng = engine == SearchEngine.Masm && MasmAvailable ? "MASM" : "JIT";
-        string ms = sw.Elapsed.TotalMilliseconds.ToString("0");
-        ResultCountText = total > ResultLimit
-            ? LF("ResultCapped", total.ToString("N0"), ResultLimit.ToString("N0"), ms, eng)
-            : LF(total == 1 ? "ResultOne" : "ResultMany", total.ToString("N0"), ms, eng);
+        if (empty)
+        {
+            ResultCountText = total > ResultLimit
+                ? LF("AllFilesCapped", total.ToString("N0"), ResultLimit.ToString("N0"))
+                : LF("AllFiles", total.ToString("N0"));
+        }
+        else
+        {
+            string eng = engine == SearchEngine.Masm && MasmAvailable ? "MASM" : "JIT";
+            string ms = sw.Elapsed.TotalMilliseconds.ToString("0");
+            ResultCountText = total > ResultLimit
+                ? LF("ResultCapped", total.ToString("N0"), ResultLimit.ToString("N0"), ms, eng)
+                : LF(total == 1 ? "ResultOne" : "ResultMany", total.ToString("N0"), ms, eng);
+        }
     }
 
     // ---------------- benchmark ----------------

@@ -66,6 +66,8 @@ internal static class Strings
         ["ResultCapped"] = "{0} matches (showing first {1}) · {2} ms · {3}",
         ["ResultMany"] = "{0} matches · {1} ms · {2}",
         ["ResultOne"] = "{0} match · {1} ms · {2}",
+        ["AllFiles"] = "{0} files",
+        ["AllFilesCapped"] = "{0} files (showing first {1})",
         ["LoadedFromCache"] = "Loaded {0} files from cache ({1}) · built {2}",
         ["IndexedSummary"] = "{0} files indexed across {1} in {2}s",
 
@@ -200,6 +202,8 @@ internal static class Strings
         ["ResultCapped"] = "{0} coincidencias (mostrando las primeras {1}) · {2} ms · {3}",
         ["ResultMany"] = "{0} coincidencias · {1} ms · {2}",
         ["ResultOne"] = "{0} coincidencia · {1} ms · {2}",
+        ["AllFiles"] = "{0} archivos",
+        ["AllFilesCapped"] = "{0} archivos (mostrando los primeros {1})",
         ["LoadedFromCache"] = "Se cargaron {0} archivos desde la caché ({1}) · creado {2}",
         ["IndexedSummary"] = "{0} archivos indexados en {1} en {2}s",
 
