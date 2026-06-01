@@ -5,8 +5,9 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:FileFinder"
         xmlns:vm="clr-namespace:FileFinder.ViewModels"
+        xmlns:l="clr-namespace:FileFinder.Localization"
         mc:Ignorable="d"
-        Title="FileFinder — Fast Disk Search" Height="680" Width="1080"
+        Title="{l:Loc WindowTitle}" Height="680" Width="1080"
         MinHeight="480" MinWidth="820"
         Background="{StaticResource BackgroundBrush}"
         FontFamily="Segoe UI"
@@ -19,6 +20,7 @@
     <Window.InputBindings>
         <KeyBinding Modifiers="Control" Key="I" Command="{Binding ShowStatisticsCommand}"/>
         <KeyBinding Modifiers="Control" Key="B" Command="{Binding BenchmarkCommand}"/>
+        <KeyBinding Modifiers="Control" Key="OemComma" Command="{Binding PreferencesCommand}"/>
     </Window.InputBindings>
 
     <DockPanel LastChildFill="True">
@@ -28,19 +30,21 @@
                 BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1">
             <Menu Background="Transparent" Foreground="{StaticResource TextBrush}"
                   Padding="6,3" FontSize="12.5">
-                <MenuItem Header="_File">
-                    <MenuItem Header="Open Cache Folder" Command="{Binding OpenCacheFolderCommand}"/>
+                <MenuItem Header="{l:Loc MenuFile}">
+                    <MenuItem Header="{l:Loc MenuOpenCacheFolder}" Command="{Binding OpenCacheFolderCommand}"/>
+                    <MenuItem Header="{l:Loc MenuPreferences}" Command="{Binding PreferencesCommand}"
+                              InputGestureText="Ctrl+,"/>
                     <Separator/>
-                    <MenuItem Header="E_xit" Click="Exit_Click"/>
+                    <MenuItem Header="{l:Loc MenuExit}" Click="Exit_Click"/>
                 </MenuItem>
-                <MenuItem Header="_View">
-                    <MenuItem Header="Index Statistics…" Command="{Binding ShowStatisticsCommand}"
+                <MenuItem Header="{l:Loc MenuView}">
+                    <MenuItem Header="{l:Loc MenuStatistics}" Command="{Binding ShowStatisticsCommand}"
                               InputGestureText="Ctrl+I"/>
-                    <MenuItem Header="Benchmark JIT vs MASM…" Command="{Binding BenchmarkCommand}"
+                    <MenuItem Header="{l:Loc MenuBenchmark}" Command="{Binding BenchmarkCommand}"
                               InputGestureText="Ctrl+B"/>
                 </MenuItem>
-                <MenuItem Header="_Help">
-                    <MenuItem Header="About FileFinder" Command="{Binding AboutCommand}"/>
+                <MenuItem Header="{l:Loc MenuHelp}">
+                    <MenuItem Header="{l:Loc MenuAbout}" Command="{Binding AboutCommand}"/>
                 </MenuItem>
             </Menu>
         </Border>
@@ -58,7 +62,7 @@
                 <!-- Brand -->
                 <StackPanel DockPanel.Dock="Top" Margin="22,24,22,18">
                     <TextBlock Text="FileFinder" FontSize="22" FontWeight="Bold" Foreground="White"/>
-                    <TextBlock Text="SIMD-accelerated disk search" FontSize="12"
+                    <TextBlock Text="{l:Loc BrandSubtitle}" FontSize="12"
                                Foreground="#94A3B8" Margin="0,2,0,0"/>
                 </StackPanel>
 
@@ -68,7 +72,7 @@
                     <StackPanel>
                         <TextBlock Text="{Binding AdminStatusText}" Foreground="#CBD5E1"
                                    FontSize="11.5" TextWrapping="Wrap"/>
-                        <Button Content="Restart as Administrator"
+                        <Button Content="{l:Loc RestartAsAdmin}"
                                 Style="{StaticResource GhostButton}"
                                 Command="{Binding RestartAsAdminCommand}"
                                 Margin="0,10,0,0" HorizontalAlignment="Left"
@@ -77,18 +81,18 @@
                 </Border>
 
                 <!-- Drives header -->
-                <TextBlock DockPanel.Dock="Top" Text="DRIVES TO INDEX" Margin="22,4,22,8"
+                <TextBlock DockPanel.Dock="Top" Text="{l:Loc DrivesToIndex}" Margin="22,4,22,8"
                            FontSize="11" FontWeight="SemiBold" Foreground="#64748B"/>
 
                 <!-- Action buttons pinned to bottom (declared first => bottom-most) -->
                 <StackPanel DockPanel.Dock="Bottom" Margin="22,12,22,22">
-                    <Button Content="Build Index" Style="{StaticResource PrimaryButton}"
+                    <Button Content="{l:Loc BuildIndex}" Style="{StaticResource PrimaryButton}"
                             Command="{Binding IndexCommand}" Height="40"
                             Visibility="{Binding IsIndexing, Converter={StaticResource InverseBoolToVis}}"/>
-                    <Button Content="Cancel Indexing" Style="{StaticResource GhostButton}"
+                    <Button Content="{l:Loc CancelIndexing}" Style="{StaticResource GhostButton}"
                             Command="{Binding CancelCommand}" Height="40"
                             Visibility="{Binding IsIndexing, Converter={StaticResource BoolToVis}}"/>
-                    <Button Content="Clear Index" Style="{StaticResource GhostButton}"
+                    <Button Content="{l:Loc ClearIndex}" Style="{StaticResource GhostButton}"
                             Command="{Binding ClearIndexCommand}" Height="34" Margin="0,8,0,0"/>
                 </StackPanel>
 
@@ -96,17 +100,17 @@
                 <Border DockPanel.Dock="Bottom" Margin="22,8,22,8" CornerRadius="7" Padding="12,10"
                         Background="{StaticResource SidebarDeepBrush}">
                     <StackPanel>
-                        <TextBlock Text="SEARCH ENGINE" FontSize="11" FontWeight="SemiBold"
+                        <TextBlock Text="{l:Loc SearchEngineHeader}" FontSize="11" FontWeight="SemiBold"
                                    Foreground="#64748B" Margin="0,0,0,8"/>
-                        <RadioButton GroupName="engine" Content="JIT — C# AVX2 intrinsics"
+                        <RadioButton GroupName="engine" Content="{l:Loc EngineJit}"
                                      IsChecked="{Binding EngineIsJit}" Foreground="#E2E8F0"
                                      FontSize="12.5" Margin="0,2"/>
-                        <RadioButton GroupName="engine" Content="MASM — hand-written .asm"
+                        <RadioButton GroupName="engine" Content="{l:Loc EngineMasm}"
                                      IsChecked="{Binding EngineIsMasm}" IsEnabled="{Binding MasmAvailable}"
                                      Foreground="#E2E8F0" FontSize="12.5" Margin="0,2"/>
                         <TextBlock Text="{Binding EngineStatusText}" Foreground="#64748B"
                                    FontSize="10.5" Margin="0,6,0,8" TextWrapping="Wrap"/>
-                        <Button Content="Benchmark JIT vs MASM" Style="{StaticResource GhostButton}"
+                        <Button Content="{l:Loc BenchmarkButton}" Style="{StaticResource GhostButton}"
                                 Command="{Binding BenchmarkCommand}" Height="34"/>
                     </StackPanel>
                 </Border>
@@ -147,7 +151,7 @@
                             <Grid Grid.Column="1">
                                 <TextBox x:Name="SearchInput" Style="{StaticResource SearchBox}"
                                          Text="{Binding Query, UpdateSourceTrigger=PropertyChanged, Delay=0}"/>
-                                <TextBlock Text="Search file names…  (try *.gif, report*, or any text)"
+                                <TextBlock Text="{l:Loc SearchPlaceholder}"
                                            Foreground="{StaticResource MutedBrush}" FontSize="15"
                                            VerticalAlignment="Center" IsHitTestVisible="False">
                                     <TextBlock.Style>
@@ -203,10 +207,10 @@
                           MouseDoubleClick="ResultsGrid_MouseDoubleClick">
                     <DataGrid.Resources>
                         <ContextMenu x:Key="RowMenu">
-                            <MenuItem Header="Open file"
+                            <MenuItem Header="{l:Loc CtxOpenFile}"
                                       Command="{Binding DataContext.OpenFileCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                       CommandParameter="{Binding}"/>
-                            <MenuItem Header="Open containing folder"
+                            <MenuItem Header="{l:Loc CtxOpenFolder}"
                                       Command="{Binding DataContext.OpenFolderCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                       CommandParameter="{Binding}"/>
                         </ContextMenu>
@@ -217,9 +221,9 @@
                         </Style>
                     </DataGrid.RowStyle>
                     <DataGrid.Columns>
-                        <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="2.2*"/>
-                        <DataGridTextColumn Header="Folder" Binding="{Binding Directory}" Width="3*"/>
-                        <DataGridTextColumn Header="Type" Binding="{Binding Extension}" Width="0.7*"/>
+                        <DataGridTextColumn Header="{l:Loc ColName}" Binding="{Binding Name}" Width="2.2*"/>
+                        <DataGridTextColumn Header="{l:Loc ColFolder}" Binding="{Binding Directory}" Width="3*"/>
+                        <DataGridTextColumn Header="{l:Loc ColType}" Binding="{Binding Extension}" Width="0.7*"/>
                     </DataGrid.Columns>
                 </DataGrid>
             </Border>

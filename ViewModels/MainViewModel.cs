@@ -8,6 +8,7 @@ using FileFinder.Core;
 using FileFinder.Dialogs;
 using FileFinder.Indexing;
 using FileFinder.Models;
+using Loc = FileFinder.Localization.Localization;
 
 namespace FileFinder.ViewModels;
 
@@ -18,6 +19,10 @@ public sealed class MainViewModel : ObservableObject
     private FileIndex? _index;
     private CancellationTokenSource? _indexCts;
     private CancellationTokenSource? _searchCts;
+    private readonly AppSettings _settings;
+
+    private static string L(string key) => Loc.Instance[key];
+    private static string LF(string key, params object[] args) => Loc.Instance.Format(key, args);
 
     public ObservableCollection<DriveItem> Drives { get; } = new();
     public ObservableCollection<FileRow> Results { get; } = new();
@@ -32,9 +37,15 @@ public sealed class MainViewModel : ObservableObject
     public RelayCommand OpenCacheFolderCommand { get; }
     public RelayCommand AboutCommand { get; }
     public RelayCommand BenchmarkCommand { get; }
+    public RelayCommand PreferencesCommand { get; }
 
     public MainViewModel()
     {
+        _settings = AppSettings.Load();
+        Loc.Instance.CurrentLanguage = _settings.Language;
+        _engine = (_settings.DefaultEngine == SearchEngine.Masm && MasmAvailable)
+            ? SearchEngine.Masm : SearchEngine.Jit;
+
         IndexCommand = new RelayCommand(_ => _ = BuildIndexAsync(), _ => !IsIndexing && AnyDriveSelected);
         CancelCommand = new RelayCommand(_ => _indexCts?.Cancel(), _ => IsIndexing);
         RestartAsAdminCommand = new RelayCommand(_ => RestartElevated(), _ => !IsElevated);
@@ -46,9 +57,52 @@ public sealed class MainViewModel : ObservableObject
         OpenCacheFolderCommand = new RelayCommand(_ => OpenCacheFolder());
         AboutCommand = new RelayCommand(_ => ShowAbout());
         BenchmarkCommand = new RelayCommand(_ => _ = RunBenchmarkAsync(), _ => !IsIndexing);
+        PreferencesCommand = new RelayCommand(_ => ShowPreferences());
+
+        _statusText = L("Ready");
+        _indexSummary = L("NoIndexYet");
+
+        // Re-localize the persistent computed/idle strings when the language changes.
+        Loc.Instance.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(Loc.CurrentLanguage)) OnLanguageChanged();
+        };
 
         LoadDrives();
         _ = LoadCachedIndexAsync();
+    }
+
+    private void ShowPreferences()
+    {
+        var engine = _engine;
+        string lang = _settings.Language;
+        if (PreferencesDialog.Show(Application.Current.MainWindow, ref engine, MasmAvailable, ref lang))
+        {
+            _settings.DefaultEngine = engine;
+            _settings.Language = lang;
+            _settings.Save();
+
+            Loc.Instance.CurrentLanguage = lang;
+            if (engine != _engine)
+            {
+                _engine = engine;
+                OnPropertyChanged(nameof(EngineIsJit));
+                OnPropertyChanged(nameof(EngineIsMasm));
+                if (!string.IsNullOrEmpty(Query)) ScheduleSearch();
+            }
+        }
+    }
+
+    private void OnLanguageChanged()
+    {
+        OnPropertyChanged(nameof(AdminStatusText));
+        OnPropertyChanged(nameof(EngineStatusText));
+        // Refresh idle status/summary text in the new language.
+        if (!IsIndexing)
+        {
+            StatusText = _index == null ? L("Ready") : L("IndexReady");
+            if (_index == null) IndexSummary = L("NoIndexYet");
+        }
     }
 
     // ---------------- properties ----------------
@@ -87,9 +141,7 @@ public sealed class MainViewModel : ObservableObject
     // ---- search engine selection ----
     public bool MasmAvailable { get; } = NativeSearch.IsAvailable;
 
-    public string EngineStatusText => MasmAvailable
-        ? "MASM engine ready (FileFinderAsm.dll)"
-        : "MASM engine unavailable — JIT only";
+    public string EngineStatusText => MasmAvailable ? L("EngineReady") : L("EngineUnavailable");
 
     private SearchEngine _engine = SearchEngine.Jit;
 
@@ -109,12 +161,13 @@ public sealed class MainViewModel : ObservableObject
     {
         OnPropertyChanged(nameof(EngineIsJit));
         OnPropertyChanged(nameof(EngineIsMasm));
+        // Persist the sidebar choice as the new default.
+        _settings.DefaultEngine = _engine;
+        _settings.Save();
         if (!string.IsNullOrEmpty(Query)) ScheduleSearch();
     }
 
-    public string AdminStatusText => IsElevated
-        ? "Administrator — fast MFT indexing available"
-        : "Standard user — using portable folder scan";
+    public string AdminStatusText => IsElevated ? L("AdminElevated") : L("AdminStandard");
 
     private bool AnyDriveSelected => Drives.Any(d => d.IsSelected);
 
@@ -154,7 +207,7 @@ public sealed class MainViewModel : ObservableObject
         string path = IndexCache.IndexPath;
         if (!File.Exists(path)) return;
 
-        StatusText = "Loading saved index…";
+        StatusText = L("LoadingIndex");
         IsIndeterminate = true;
         var idx = await Task.Run(() => FileIndex.TryLoad(path));
         IsIndeterminate = false;
@@ -162,15 +215,15 @@ public sealed class MainViewModel : ObservableObject
         if (idx != null)
         {
             _index = idx;
-            IndexSummary = $"Loaded {idx.Count:N0} files from cache " +
-                           $"({string.Join(", ", idx.Drives.Select(d => d.TrimEnd('\\')))}) · " +
-                           $"built {idx.BuiltUtc.ToLocalTime():g}";
-            StatusText = "Index ready. Start typing to search.";
+            string drives = string.Join(", ", idx.Drives.Select(d => d.TrimEnd('\\')));
+            IndexSummary = LF("LoadedFromCache", idx.Count.ToString("N0"), drives,
+                idx.BuiltUtc.ToLocalTime().ToString("g"));
+            StatusText = L("IndexReady");
             RaiseCommands();
         }
         else
         {
-            StatusText = "Ready.";
+            StatusText = L("Ready");
         }
     }
 
@@ -179,8 +232,7 @@ public sealed class MainViewModel : ObservableObject
         var selected = Drives.Where(d => d.IsSelected).Select(d => d.Root).ToList();
         if (selected.Count == 0)
         {
-            ModalDialog.Show(Application.Current.MainWindow, "No drives selected",
-                "Select at least one drive to index.");
+            ModalDialog.Show(Application.Current.MainWindow, L("NoDrivesTitle"), L("NoDrivesMsg"));
             return;
         }
 
@@ -195,8 +247,9 @@ public sealed class MainViewModel : ObservableObject
         var progress = new Progress<IndexProgress>(p =>
         {
             if (p.Done) return;
-            string method = p.Method == IndexMethod.Mft ? "MFT (fast)" : "Scanning";
-            StatusText = $"{method} · {p.Drive.TrimEnd('\\')} · {p.FilesSoFar:N0} files · {Shorten(p.CurrentPath)}";
+            string method = p.Method == IndexMethod.Mft ? L("MethodMftFast") : L("MethodScanning");
+            StatusText = LF("StatusIndexing", method, p.Drive.TrimEnd('\\'),
+                p.FilesSoFar.ToString("N0"), Shorten(p.CurrentPath));
         });
 
         try
@@ -206,22 +259,22 @@ public sealed class MainViewModel : ObservableObject
 
             await Task.Run(() => _index!.Save(IndexCache.IndexPath));
 
-            IndexSummary = $"{_index.Count:N0} files indexed across " +
-                           $"{string.Join(", ", selected.Select(d => d.TrimEnd('\\')))} " +
-                           $"in {sw.Elapsed.TotalSeconds:0.0}s";
-            StatusText = "Index ready. Start typing to search.";
+            string drives = string.Join(", ", selected.Select(d => d.TrimEnd('\\')));
+            IndexSummary = LF("IndexedSummary", _index.Count.ToString("N0"), drives,
+                sw.Elapsed.TotalSeconds.ToString("0.0"));
+            StatusText = L("IndexReady");
 
             if (!string.IsNullOrEmpty(Query)) ScheduleSearch();
         }
         catch (OperationCanceledException)
         {
-            StatusText = "Indexing cancelled.";
-            IndexSummary = "Indexing cancelled — no index built.";
+            StatusText = L("IndexingCancelled");
+            IndexSummary = L("IndexingCancelledSummary");
         }
         catch (Exception ex)
         {
-            ModalDialog.Show(Application.Current.MainWindow, "Indexing failed", ex.Message);
-            StatusText = "Indexing failed.";
+            ModalDialog.Show(Application.Current.MainWindow, L("IndexingFailedTitle"), ex.Message);
+            StatusText = L("IndexingFailed");
         }
         finally
         {
@@ -234,16 +287,16 @@ public sealed class MainViewModel : ObservableObject
 
     private void ClearIndex()
     {
-        if (!ModalDialog.Confirm(Application.Current.MainWindow, "Clear index",
-                "Remove the in-memory index and delete the saved cache file?", "Clear"))
+        if (!ModalDialog.Confirm(Application.Current.MainWindow, L("ClearTitle"),
+                L("ClearMsg"), L("ClearConfirm")))
             return;
 
         _index = null;
         Results.Clear();
         ResultCountText = "";
         try { if (File.Exists(IndexCache.IndexPath)) File.Delete(IndexCache.IndexPath); } catch { }
-        IndexSummary = "No index — select drives and click Build Index.";
-        StatusText = "Index cleared.";
+        IndexSummary = L("NoIndexShort");
+        StatusText = L("IndexCleared");
         RaiseCommands();
     }
 
@@ -265,7 +318,7 @@ public sealed class MainViewModel : ObservableObject
         if (index == null)
         {
             Results.Clear();
-            ResultCountText = _query.Length > 0 ? "Build an index first." : "";
+            ResultCountText = _query.Length > 0 ? L("BuildFirst") : "";
             return;
         }
         if (string.IsNullOrEmpty(query))
@@ -299,9 +352,10 @@ public sealed class MainViewModel : ObservableObject
         foreach (var r in rows) Results.Add(r);
 
         string eng = engine == SearchEngine.Masm && MasmAvailable ? "MASM" : "JIT";
+        string ms = sw.Elapsed.TotalMilliseconds.ToString("0");
         ResultCountText = total > ResultLimit
-            ? $"{total:N0} matches (showing first {ResultLimit:N0}) · {sw.Elapsed.TotalMilliseconds:0} ms · {eng}"
-            : $"{total:N0} match{(total == 1 ? "" : "es")} · {sw.Elapsed.TotalMilliseconds:0} ms · {eng}";
+            ? LF("ResultCapped", total.ToString("N0"), ResultLimit.ToString("N0"), ms, eng)
+            : LF(total == 1 ? "ResultOne" : "ResultMany", total.ToString("N0"), ms, eng);
     }
 
     // ---------------- benchmark ----------------
@@ -311,28 +365,23 @@ public sealed class MainViewModel : ObservableObject
         var index = _index;
         if (index == null)
         {
-            ModalDialog.Show(Application.Current.MainWindow, "Benchmark",
-                "Build or load an index first, then run the benchmark.");
+            ModalDialog.Show(Application.Current.MainWindow, L("BenchTitle"), L("BenchNoIndex"));
             return;
         }
 
         string q = Query;
         if (string.IsNullOrWhiteSpace(q))
         {
-            ModalDialog.Show(Application.Current.MainWindow, "Benchmark",
-                "Type a search term first, then run the benchmark.\n\n" +
-                "Tip: use plain text (no * or ?) — the MASM engine compares against the JIT engine on substring searches.");
+            ModalDialog.Show(Application.Current.MainWindow, L("BenchTitle"), L("BenchTypeFirst"));
             return;
         }
         if (WildcardMatcher.HasWildcard(q))
         {
-            ModalDialog.Show(Application.Current.MainWindow, "Benchmark",
-                "Wildcard queries always use the JIT engine, so there's nothing to compare.\n\n" +
-                "Use a plain text term (no * or ?) to race the JIT and MASM engines.");
+            ModalDialog.Show(Application.Current.MainWindow, L("BenchTitle"), L("BenchWildcard"));
             return;
         }
 
-        StatusText = "Benchmarking engines…";
+        StatusText = L("Benchmarking");
         var (jitMs, masmMs, total) = await Task.Run(() =>
         {
             const int iters = 40;
@@ -341,32 +390,30 @@ public sealed class MainViewModel : ObservableObject
             double m = MasmAvailable ? BestOf(() => index.Search(q, ResultLimit, SearchEngine.Masm), iters) : -1;
             return (j, m, t);
         });
-        StatusText = "Index ready. Start typing to search.";
+        StatusText = L("IndexReady");
 
         string msg =
-            $"Search term:  \"{q}\"\n" +
-            $"Names scanned:  {index.Count:N0}\n" +
-            $"Matches:  {total:N0}\n\n" +
-            $"JIT  (C# AVX2 intrinsics):     {jitMs:0.000} ms\n";
+            LF("BenchTerm", q) + "\n" +
+            LF("BenchScanned", index.Count.ToString("N0")) + "\n" +
+            LF("BenchMatches", total.ToString("N0")) + "\n\n" +
+            LF("BenchJit", jitMs) + "\n";
 
         if (masmMs >= 0)
         {
-            msg += $"MASM (hand-written .asm DLL):  {masmMs:0.000} ms\n\n";
+            msg += LF("BenchMasm", masmMs) + "\n\n";
             if (masmMs > 0 && jitMs > 0)
             {
                 double ratio = jitMs / masmMs;
-                msg += ratio >= 1.0
-                    ? $"→ MASM is {ratio:0.0}× faster"
-                    : $"→ JIT is {1.0 / ratio:0.0}× faster";
+                msg += ratio >= 1.0 ? LF("BenchMasmFaster", ratio) : LF("BenchJitFaster", 1.0 / ratio);
             }
         }
         else
         {
-            msg += "MASM: unavailable (FileFinderAsm.dll not loaded)\n";
+            msg += L("BenchMasmUnavailable") + "\n";
         }
-        msg += "\n(best of 40 runs, all CPU cores)";
+        msg += "\n" + L("BenchFooter");
 
-        ModalDialog.Show(Application.Current.MainWindow, "Engine Benchmark", msg);
+        ModalDialog.Show(Application.Current.MainWindow, L("BenchTitle"), msg);
     }
 
     private static double BestOf(Func<(List<int>, int)> action, int iters)
@@ -393,7 +440,7 @@ public sealed class MainViewModel : ObservableObject
         try { Process.Start(new ProcessStartInfo(row.FullPath) { UseShellExecute = true }); }
         catch (Exception ex)
         {
-            ModalDialog.Show(Application.Current.MainWindow, "Cannot open file", ex.Message);
+            ModalDialog.Show(Application.Current.MainWindow, L("CannotOpenFile"), ex.Message);
         }
     }
 
@@ -409,7 +456,7 @@ public sealed class MainViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            ModalDialog.Show(Application.Current.MainWindow, "Cannot open folder", ex.Message);
+            ModalDialog.Show(Application.Current.MainWindow, L("CannotOpenFolder"), ex.Message);
         }
     }
 
@@ -418,7 +465,7 @@ public sealed class MainViewModel : ObservableObject
         try { Process.Start(new ProcessStartInfo(IndexCache.Directory) { UseShellExecute = true }); }
         catch (Exception ex)
         {
-            ModalDialog.Show(Application.Current.MainWindow, "Cannot open cache folder", ex.Message);
+            ModalDialog.Show(Application.Current.MainWindow, L("CannotOpenCache"), ex.Message);
         }
     }
 
@@ -426,10 +473,8 @@ public sealed class MainViewModel : ObservableObject
     {
         var v = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
         string ver = v is null ? "1.0" : $"{v.Major}.{v.Minor}.{v.Build}";
-        ModalDialog.Show(Application.Current.MainWindow, "About FileFinder",
-            $"FileFinder {ver}\n\n" +
-            "SIMD-accelerated disk search for Windows (C# / WPF, .NET 9).\n\n" +
-            $"AVX2 hardware search: {(Core.SimdSearch.HardwareAccelerated ? "enabled" : "scalar fallback")}.");
+        string avx = Core.SimdSearch.HardwareAccelerated ? L("AvxEnabled") : L("AvxScalar");
+        ModalDialog.Show(Application.Current.MainWindow, L("AboutTitle"), LF("AboutBody", ver, avx));
     }
 
     private void RestartElevated()
@@ -444,7 +489,7 @@ public sealed class MainViewModel : ObservableObject
         catch (Exception ex)
         {
             // User declined the UAC prompt, or relaunch failed.
-            ModalDialog.Show(Application.Current.MainWindow, "Could not restart as Administrator", ex.Message);
+            ModalDialog.Show(Application.Current.MainWindow, L("RestartAdminFailTitle"), ex.Message);
         }
     }
 

@@ -6,12 +6,14 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using FileFinder.Core;
+using Loc = FileFinder.Localization.Localization;
 
 namespace FileFinder.Dialogs;
 
 public partial class StatisticsDialog : Window
 {
     private readonly string _cacheDir;
+    private static string L(string key) => Loc.Instance[key];
 
     private StatisticsDialog(string cacheDir)
     {
@@ -37,24 +39,25 @@ public partial class StatisticsDialog : Window
 
         if (index == null)
         {
-            SubtitleText.Text = "No index is currently loaded.";
-            AddRow("Status", "No index built yet — use Build Index first.");
+            SubtitleText.Text = L("StatsNoIndexSubtitle");
+            AddRow(L("StatsStatus"), L("StatsNoIndexRow"));
             ExtSection.Visibility = Visibility.Collapsed;
         }
         else
         {
-            SubtitleText.Text = $"Built {index.BuiltUtc.ToLocalTime():dddd, MMM d yyyy  h:mm tt}";
-            AddRow("Files indexed", index.Count.ToString("N0"));
-            AddRow("Folders", index.DirectoryCount.ToString("N0"));
-            AddRow("Drives", string.Join("   ", System.Array.ConvertAll(index.Drives, x => x.TrimEnd('\\'))));
-            AddRow("Memory in use (app)", HumanSize(index.ApproxMemoryBytes));
-            AddRow("SIMD acceleration", SimdSearch.HardwareAccelerated ? "AVX2 (hardware)" : "Scalar fallback");
+            SubtitleText.Text = string.Format(L("StatsBuilt"),
+                index.BuiltUtc.ToLocalTime().ToString("dddd, MMM d yyyy  h:mm tt"));
+            AddRow(L("StatsFiles"), index.Count.ToString("N0"));
+            AddRow(L("StatsFolders"), index.DirectoryCount.ToString("N0"));
+            AddRow(L("StatsDrives"), string.Join("   ", System.Array.ConvertAll(index.Drives, x => x.TrimEnd('\\'))));
+            AddRow(L("StatsMemory"), HumanSize(index.ApproxMemoryBytes));
+            AddRow(L("StatsSimd"), SimdSearch.HardwareAccelerated ? L("SimdAvx2") : L("SimdScalar"));
             PopulateExtensions(index);
         }
 
         AddSeparator();
-        AddRow("Cache file", cachePath, mono: true);
-        AddRow("Cache size on disk", cacheExists ? HumanSize(cacheBytes) : "Not saved yet");
+        AddRow(L("StatsCacheFile"), cachePath, mono: true);
+        AddRow(L("StatsCacheSize"), cacheExists ? HumanSize(cacheBytes) : L("StatsNotSaved"));
         OpenFolderButton.IsEnabled = Directory.Exists(_cacheDir);
     }
 
@@ -69,7 +72,7 @@ public partial class StatisticsDialog : Window
         {
             items.Add(new
             {
-                Ext = ext,
+                Ext = ext == "(no extension)" ? L("StatsNoExt") : ext,
                 CountText = count.ToString("N0"),
                 BarWidth = max > 0 ? System.Math.Max(2.0, 280.0 * count / max) : 2.0
             });

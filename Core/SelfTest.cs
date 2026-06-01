@@ -74,6 +74,17 @@ internal static class SelfTest
         Check("top extension is .dll x2",
             topExt.Count > 0 && topExt[0].Ext == ".dll" && topExt[0].Count == 2);
         Check("memory estimate > 0", index.ApproxMemoryBytes > 0);
+
+        // ---- localization completeness: Spanish covers every English key ----
+        int missingEs = 0; string firstMissing = "";
+        foreach (var key in FileFinder.Localization.Strings.En.Keys)
+            if (!FileFinder.Localization.Strings.Es.ContainsKey(key))
+            {
+                missingEs++;
+                if (firstMissing.Length == 0) firstMissing = key;
+            }
+        Check($"Spanish covers all {FileFinder.Localization.Strings.En.Count} keys" +
+              (missingEs > 0 ? $" (missing {missingEs}, e.g. {firstMissing})" : ""), missingEs == 0);
         Check("single char 'a' broad", index.Search("a", 100).total >= 4);
         Check("limit caps hits but not total", index.Search("a", 2).hits.Count == 2);
 

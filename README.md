@@ -12,7 +12,7 @@ milliseconds.
 
 Grab the latest build from the [**Releases**](https://github.com/robertorenz/FileFinder/releases/latest) page:
 
-- **`FileFinder-Setup-1.0.3.exe`** — installer (Start Menu + optional desktop shortcut, uninstaller). Installs per-user without admin, or all-users with admin.
+- **`FileFinder-Setup-1.0.4.exe`** — installer (Start Menu + optional desktop shortcut, uninstaller). Installs per-user without admin, or all-users with admin.
 - **`FileFinder.exe`** — portable single file. No install, no .NET runtime required — just download and run.
 
 ## Highlights
@@ -41,6 +41,11 @@ Grab the latest build from the [**Releases**](https://github.com/robertorenz/Fil
 - **Professional UI** — clean slate/blue theme, live result count and timing,
   double-click to open, right-click to reveal in Explorer. Modal dialogs (no
   system alert boxes).
+- **Preferences** (*File → Preferences…*, or `Ctrl+,`) — pick the default search
+  engine (MASM by default where available) and the UI language. Saved to
+  `settings.json` and applied on every launch.
+- **Multilingual** — English and Spanish (Español), switchable live from
+  Preferences with no restart.
 
 ## Two search engines (benchmark them yourself)
 
