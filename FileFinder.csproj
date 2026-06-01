@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net9.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+    <AssemblyName>FileFinder</AssemblyName>
+    <RootNamespace>FileFinder</RootNamespace>
+
+    <!-- Required for the hand-written SIMD (AVX2) search routines -->
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+
+    <!-- App manifest declares asInvoker (no forced UAC) + per-monitor DPI -->
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+
+    <!-- Server GC helps when holding millions of file records in memory -->
+    <ServerGarbageCollection>true</ServerGarbageCollection>
+    <ConcurrentGarbageCollection>true</ConcurrentGarbageCollection>
+
+    <Version>1.0.0</Version>
+  </PropertyGroup>
+
+</Project>
