@@ -14,7 +14,9 @@ public partial class PreferencesDialog : Window
 {
     private readonly string _originalLanguage;
     private readonly Action? _onRestartAdmin;
+    private readonly AppSettings _settings;
     private readonly Dictionary<object, bool> _driveSnapshot = new();
+    private readonly (bool Folder, bool Type, bool Size, bool Modified, bool Attributes) _columnSnapshot;
     private bool _initialized;
 
     public SearchEngine SelectedEngine { get; private set; }
@@ -22,15 +24,21 @@ public partial class PreferencesDialog : Window
     public PrefResult Result { get; private set; } = PrefResult.Cancel;
 
     private PreferencesDialog(SearchEngine engine, bool masmAvailable, string language,
-        IEnumerable drives, bool isElevated, Action? onRestartAdmin)
+        IEnumerable drives, bool isElevated, Action? onRestartAdmin, AppSettings settings)
     {
         InitializeComponent();
         MouseLeftButtonDown += (_, e) => { if (e.ButtonState == MouseButtonState.Pressed) DragMove(); };
 
         _originalLanguage = language;
         _onRestartAdmin = onRestartAdmin;
+        _settings = settings;
         SelectedEngine = engine;
         SelectedLanguage = language;
+
+        // Columns bind two-way to the settings POCO; snapshot for Cancel.
+        ColumnsPanel.DataContext = settings;
+        _columnSnapshot = (settings.ShowFolder, settings.ShowType, settings.ShowSize,
+            settings.ShowModified, settings.ShowAttributes);
 
         MasmRadio.IsEnabled = masmAvailable;
         MasmRadio.IsChecked = engine == SearchEngine.Masm && masmAvailable;
@@ -51,9 +59,9 @@ public partial class PreferencesDialog : Window
 
     /// <summary>Shows the dialog. Engine/language are written back unless the user cancelled.</summary>
     public static PrefResult Show(Window? owner, ref SearchEngine engine, bool masmAvailable,
-        ref string language, IEnumerable drives, bool isElevated, Action? onRestartAdmin)
+        ref string language, IEnumerable drives, bool isElevated, Action? onRestartAdmin, AppSettings settings)
     {
-        var d = new PreferencesDialog(engine, masmAvailable, language, drives, isElevated, onRestartAdmin)
+        var d = new PreferencesDialog(engine, masmAvailable, language, drives, isElevated, onRestartAdmin, settings)
         {
             Owner = owner ?? Application.Current?.MainWindow
         };
@@ -96,10 +104,12 @@ public partial class PreferencesDialog : Window
 
     private void Cancel_Click(object sender, RoutedEventArgs e)
     {
-        // Revert live previews: language + drive selection.
+        // Revert live previews: language + drive selection + columns.
         Loc.Instance.CurrentLanguage = _originalLanguage;
         foreach (var kv in _driveSnapshot)
             if (kv.Key is Models.DriveItem di) di.IsSelected = kv.Value;
+        (_settings.ShowFolder, _settings.ShowType, _settings.ShowSize,
+         _settings.ShowModified, _settings.ShowAttributes) = _columnSnapshot;
 
         Result = PrefResult.Cancel;
         DialogResult = false;

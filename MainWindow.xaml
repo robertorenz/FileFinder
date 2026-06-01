@@ -23,6 +23,11 @@
         <KeyBinding Modifiers="Control" Key="OemComma" Command="{Binding PreferencesCommand}"/>
     </Window.InputBindings>
 
+    <Window.Resources>
+        <!-- Carries the VM into DataGridColumn.Visibility bindings -->
+        <vm:BindingProxy x:Key="proxy" Data="{Binding}"/>
+    </Window.Resources>
+
     <DockPanel LastChildFill="True">
 
         <!-- ============ Menu bar ============ -->
@@ -151,8 +156,16 @@
                 </DataGrid.RowStyle>
                 <DataGrid.Columns>
                     <DataGridTextColumn Header="{l:Loc ColName}" Binding="{Binding Name}" Width="2.2*"/>
-                    <DataGridTextColumn Header="{l:Loc ColFolder}" Binding="{Binding Directory}" Width="3*"/>
-                    <DataGridTextColumn Header="{l:Loc ColType}" Binding="{Binding Extension}" Width="0.7*"/>
+                    <DataGridTextColumn Header="{l:Loc ColFolder}" Binding="{Binding Directory}" Width="3*"
+                                        Visibility="{Binding Data.ShowFolderColumn, Source={StaticResource proxy}, Converter={StaticResource BoolToVis}}"/>
+                    <DataGridTextColumn Header="{l:Loc ColType}" Binding="{Binding Extension}" Width="0.7*"
+                                        Visibility="{Binding Data.ShowTypeColumn, Source={StaticResource proxy}, Converter={StaticResource BoolToVis}}"/>
+                    <DataGridTextColumn Header="{l:Loc ColSize}" Binding="{Binding SizeText}" Width="0.8*"
+                                        Visibility="{Binding Data.ShowSizeColumn, Source={StaticResource proxy}, Converter={StaticResource BoolToVis}}"/>
+                    <DataGridTextColumn Header="{l:Loc ColModified}" Binding="{Binding ModifiedText}" Width="1.3*"
+                                        Visibility="{Binding Data.ShowModifiedColumn, Source={StaticResource proxy}, Converter={StaticResource BoolToVis}}"/>
+                    <DataGridTextColumn Header="{l:Loc ColAttributes}" Binding="{Binding AttributesText}" Width="0.7*"
+                                        Visibility="{Binding Data.ShowAttributesColumn, Source={StaticResource proxy}, Converter={StaticResource BoolToVis}}"/>
                 </DataGrid.Columns>
             </DataGrid>
         </Border>

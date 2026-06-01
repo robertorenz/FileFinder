@@ -40,6 +40,9 @@ internal static class Strings
         ["ColName"] = "Name",
         ["ColFolder"] = "Folder",
         ["ColType"] = "Type",
+        ["ColSize"] = "Size",
+        ["ColModified"] = "Date modified",
+        ["ColAttributes"] = "Attributes",
         ["CtxOpenFile"] = "Open file",
         ["CtxOpenFolder"] = "Open containing folder",
 
@@ -130,6 +133,8 @@ internal static class Strings
         ["PrefEngineJit"] = "JIT — C# AVX2 intrinsics (works everywhere)",
         ["PrefEngineNote"] = "MASM needs FileFinderAsm.dll; falls back to JIT if unavailable.",
         ["PrefLanguage"] = "LANGUAGE",
+        ["PrefColumns"] = "RESULT COLUMNS",
+        ["PrefColumnsNote"] = "Name is always shown. Size, Date modified and Attributes are read from disk for the results you see.",
     };
 
     public static readonly Dictionary<string, string> Es = new()
@@ -169,6 +174,9 @@ internal static class Strings
         ["ColName"] = "Nombre",
         ["ColFolder"] = "Carpeta",
         ["ColType"] = "Tipo",
+        ["ColSize"] = "Tamaño",
+        ["ColModified"] = "Fecha de modificación",
+        ["ColAttributes"] = "Atributos",
         ["CtxOpenFile"] = "Abrir archivo",
         ["CtxOpenFolder"] = "Abrir carpeta contenedora",
 
@@ -259,5 +267,7 @@ internal static class Strings
         ["PrefEngineJit"] = "JIT — intrínsecos AVX2 de C# (funciona en todos)",
         ["PrefEngineNote"] = "MASM necesita FileFinderAsm.dll; usa JIT si no está disponible.",
         ["PrefLanguage"] = "IDIOMA",
+        ["PrefColumns"] = "COLUMNAS DE RESULTADOS",
+        ["PrefColumnsNote"] = "El nombre siempre se muestra. El tamaño, la fecha de modificación y los atributos se leen del disco para los resultados visibles.",
     };
 }

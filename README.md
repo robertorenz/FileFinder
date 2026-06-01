@@ -12,7 +12,7 @@ milliseconds.
 
 Grab the latest build from the [**Releases**](https://github.com/robertorenz/FileFinder/releases/latest) page:
 
-- **`FileFinder-Setup-1.0.8.exe`** — installer (Start Menu + optional desktop shortcut, uninstaller). Installs per-user without admin, or all-users with admin.
+- **`FileFinder-Setup-1.0.9.exe`** — installer (Start Menu + optional desktop shortcut, uninstaller). Installs per-user without admin, or all-users with admin.
 - **`FileFinder.exe`** — portable single file. No install, no .NET runtime required — just download and run.
 
 ## Highlights
@@ -46,6 +46,10 @@ Grab the latest build from the [**Releases**](https://github.com/robertorenz/Fil
   `settings.json` and applied on every launch.
 - **Multilingual** — English and Spanish (Español), switchable live from
   Preferences with no restart.
+- **Configurable result columns** — show/hide Folder, Type, **Size**, **Date
+  modified**, and **Attributes** from *Preferences → Result columns*. Size and
+  dates are read from disk only for the rows you see, so they cost nothing when
+  hidden.
 
 ## Two search engines (benchmark them yourself)
 

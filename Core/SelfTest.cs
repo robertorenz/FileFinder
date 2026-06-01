@@ -85,6 +85,20 @@ internal static class SelfTest
             }
         Check($"Spanish covers all {FileFinder.Localization.Strings.En.Count} keys" +
               (missingEs > 0 ? $" (missing {missingEs}, e.g. {firstMissing})" : ""), missingEs == 0);
+
+        // ---- file-row metadata (size / modified / attributes) ----
+        string metaTmp = Path.Combine(Path.GetTempPath(), "fffix_meta_test.bin");
+        File.WriteAllBytes(metaTmp, new byte[4096]);
+        var metaRow = new FileFinder.Models.FileRow
+        {
+            Name = Path.GetFileName(metaTmp),
+            Directory = Path.GetDirectoryName(metaTmp)!,
+            FullPath = metaTmp
+        };
+        metaRow.LoadMetadata();
+        Check("file metadata: size populated", metaRow.SizeText.Length > 0);
+        Check("file metadata: modified populated", metaRow.ModifiedText.Length > 0);
+        try { File.Delete(metaTmp); } catch { }
         Check("single char 'a' broad", index.Search("a", 100).total >= 4);
         Check("limit caps hits but not total", index.Search("a", 2).hits.Count == 2);
 

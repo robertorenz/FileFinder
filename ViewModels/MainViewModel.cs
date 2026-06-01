@@ -87,7 +87,7 @@ public sealed class MainViewModel : ObservableObject
         var engine = _engine;
         string lang = _settings.Language;
         var result = PreferencesDialog.Show(Application.Current.MainWindow, ref engine, MasmAvailable,
-            ref lang, Drives, IsElevated, IsElevated ? null : RestartElevated);
+            ref lang, Drives, IsElevated, IsElevated ? null : RestartElevated, _settings);
 
         if (result == PrefResult.Cancel) return;
 
@@ -103,6 +103,7 @@ public sealed class MainViewModel : ObservableObject
             OnPropertyChanged(nameof(EngineIsJit));
             OnPropertyChanged(nameof(EngineIsMasm));
         }
+        RefreshColumns();
         RaiseCommands();
 
         switch (result)
@@ -110,7 +111,7 @@ public sealed class MainViewModel : ObservableObject
             case PrefResult.Build: _ = BuildIndexAsync(); break;
             case PrefResult.Clear: ClearIndex(); break;
             case PrefResult.Benchmark: _ = RunBenchmarkAsync(); break;
-            default: if (!string.IsNullOrEmpty(Query)) ScheduleSearch(); break;
+            default: if (!string.IsNullOrEmpty(Query)) ScheduleSearch(); break; // refresh metadata
         }
     }
 
@@ -189,6 +190,22 @@ public sealed class MainViewModel : ObservableObject
     }
 
     public string AdminStatusText => IsElevated ? L("AdminElevated") : L("AdminStandard");
+
+    // ---- result column visibility (bound by DataGrid columns via BindingProxy) ----
+    public bool ShowFolderColumn => _settings.ShowFolder;
+    public bool ShowTypeColumn => _settings.ShowType;
+    public bool ShowSizeColumn => _settings.ShowSize;
+    public bool ShowModifiedColumn => _settings.ShowModified;
+    public bool ShowAttributesColumn => _settings.ShowAttributes;
+
+    private void RefreshColumns()
+    {
+        OnPropertyChanged(nameof(ShowFolderColumn));
+        OnPropertyChanged(nameof(ShowTypeColumn));
+        OnPropertyChanged(nameof(ShowSizeColumn));
+        OnPropertyChanged(nameof(ShowModifiedColumn));
+        OnPropertyChanged(nameof(ShowAttributesColumn));
+    }
 
     private bool AnyDriveSelected => Drives.Any(d => d.IsSelected);
 
@@ -357,22 +374,28 @@ public sealed class MainViewModel : ObservableObject
         }
 
         var engine = _engine;
+        bool loadMeta = _settings.ShowSize || _settings.ShowModified || _settings.ShowAttributes;
         var sw = Stopwatch.StartNew();
-        var (hits, total) = await Task.Run(() => index.Search(query, ResultLimit, engine), ct);
-        if (ct.IsCancellationRequested) return;
 
-        var rows = new List<FileRow>(hits.Count);
-        foreach (int i in hits)
+        var (rows, total) = await Task.Run(() =>
         {
-            string name = index.GetName(i);
-            rows.Add(new FileRow
+            var (hits, tot) = index.Search(query, ResultLimit, engine);
+            var list = new List<FileRow>(hits.Count);
+            foreach (int i in hits)
             {
-                Name = name,
-                Directory = index.GetDirectory(i),
-                FullPath = index.GetFullPath(i),
-                Extension = Path.GetExtension(name)
-            });
-        }
+                string name = index.GetName(i);
+                var row = new FileRow
+                {
+                    Name = name,
+                    Directory = index.GetDirectory(i),
+                    FullPath = index.GetFullPath(i),
+                    Extension = Path.GetExtension(name)
+                };
+                if (loadMeta) row.LoadMetadata();
+                list.Add(row);
+            }
+            return (list, tot);
+        }, ct);
         sw.Stop();
 
         if (ct.IsCancellationRequested) return;

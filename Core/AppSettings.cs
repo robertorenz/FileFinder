@@ -18,6 +18,13 @@ public sealed class AppSettings
     /// <summary>Drive roots the user selected to index (e.g. "C:\\"). Empty = default to system drive.</summary>
     public List<string> IndexedDrives { get; set; } = new();
 
+    // ---- result columns (Name is always shown) ----
+    public bool ShowFolder { get; set; } = true;
+    public bool ShowType { get; set; } = true;
+    public bool ShowSize { get; set; } = true;
+    public bool ShowModified { get; set; } = true;
+    public bool ShowAttributes { get; set; } = false;
+
     [JsonIgnore]
     public static string Path => System.IO.Path.Combine(IndexCache.Directory, "settings.json");
 
