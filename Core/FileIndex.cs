@@ -116,25 +116,47 @@ public sealed class FileIndex
     public unsafe (List<int> hits, int total) Search(string query, int limit,
         SearchEngine engine = SearchEngine.Jit)
     {
-        if (string.IsNullOrEmpty(query))
+        if (string.IsNullOrWhiteSpace(query))
             return (new List<int>(), 0);
 
-        byte[] needle = Encoding.UTF8.GetBytes(query.ToLowerInvariant());
-        bool glob = WildcardMatcher.HasWildcard(query);
+        // Split into space-separated words; a file must contain EVERY word
+        // (in any order, anywhere in the name). A word with * or ? is matched
+        // as a glob against the whole name; plain words are substring matches.
+        string[] parts = query.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length == 0)
+            return (new List<int>(), 0);
 
-        // The MASM engine does plain substring only; globs always use the JIT path.
-        if (engine == SearchEngine.Masm && !glob && NativeSearch.IsAvailable)
-            return SearchMasm(needle, limit);
+        // Pack all word bytes into one contiguous buffer for lock-free pinning.
+        var tokGlob = new bool[parts.Length];
+        var tokOff = new int[parts.Length + 1];
+        int totalLen = 0;
+        var encoded = new byte[parts.Length][];
+        for (int t = 0; t < parts.Length; t++)
+        {
+            encoded[t] = Encoding.UTF8.GetBytes(parts[t].ToLowerInvariant());
+            tokGlob[t] = WildcardMatcher.HasWildcard(parts[t]);
+            tokOff[t] = totalLen;
+            totalLen += encoded[t].Length;
+        }
+        tokOff[parts.Length] = totalLen;
+        var tokBlob = new byte[totalLen];
+        for (int t = 0; t < parts.Length; t++)
+            Array.Copy(encoded[t], 0, tokBlob, tokOff[t], encoded[t].Length);
 
-        return SearchManaged(needle, glob, limit);
+        // Single plain word: use the fast MASM engine when selected.
+        if (parts.Length == 1 && !tokGlob[0] && engine == SearchEngine.Masm && NativeSearch.IsAvailable)
+            return SearchMasm(tokBlob, limit);
+
+        return SearchManagedTokens(tokBlob, tokOff, tokGlob, limit);
     }
 
-    private unsafe (List<int> hits, int total) SearchManaged(byte[] needle, bool glob, int limit)
+    private unsafe (List<int> hits, int total) SearchManagedTokens(byte[] tokBlob, int[] tokOff, bool[] tokGlob, int limit)
     {
         int partitions = Math.Max(1, Environment.ProcessorCount);
         var local = new List<int>[partitions];
         var counts = new int[partitions];
         int n = Count;
+        int tokCount = tokGlob.Length;
 
         Parallel.For(0, partitions, pIdx =>
         {
@@ -143,17 +165,26 @@ public sealed class FileIndex
             var list = new List<int>();
 
             fixed (byte* blob = _lowerBytes)
-            fixed (byte* nd = needle)
+            fixed (byte* tb = tokBlob)
             fixed (int* off = _lowerOff)
             {
                 for (int i = from; i < to; i++)
                 {
                     int start = off[i];
                     int len = off[i + 1] - start;
-                    bool hit = glob
-                        ? WildcardMatcher.Match(blob + start, len, nd, needle.Length)
-                        : SimdSearch.Contains(blob, start, len, nd, needle.Length);
-                    if (hit)
+
+                    bool all = true;
+                    for (int t = 0; t < tokCount; t++)
+                    {
+                        byte* tptr = tb + tokOff[t];
+                        int tlen = tokOff[t + 1] - tokOff[t];
+                        bool ok = tokGlob[t]
+                            ? WildcardMatcher.Match(blob + start, len, tptr, tlen)
+                            : SimdSearch.Contains(blob, start, len, tptr, tlen);
+                        if (!ok) { all = false; break; }
+                    }
+
+                    if (all)
                     {
                         counts[pIdx]++;
                         if (list.Count < limit)

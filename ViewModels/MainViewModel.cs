@@ -372,7 +372,7 @@ public sealed class MainViewModel : ObservableObject
         }
 
         var engine = _engine;
-        bool empty = string.IsNullOrEmpty(query);
+        bool empty = string.IsNullOrWhiteSpace(query);
         bool loadMeta = _settings.ShowSize || _settings.ShowModified || _settings.ShowAttributes;
         var sw = Stopwatch.StartNew();
 

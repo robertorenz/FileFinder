@@ -68,6 +68,14 @@ internal static class SelfTest
         Check("'*.xyz' no match", index.Search("*.xyz", 100).total == 0);
         Check("'program.cs' no wildcard still works", index.Search("program.cs", 100).total == 1);
 
+        // ---- multi-word (AND, any order, anywhere incl. extension) ----
+        Check("'report 2024' -> 1 (all words)", index.Search("report 2024", 100).total == 1);
+        Check("'2024 report' order-independent", index.Search("2024 report", 100).total == 1);
+        Check("'animation gif' matches name+ext", index.Search("animation gif", 100).total == 1);
+        Check("'report 2024 missing' -> 0", index.Search("report 2024 missing", 100).total == 0);
+        Check("'kernel dll' both words -> 2", index.Search("kernel dll", 100).total == 2);
+        Check("extra spaces ignored", index.Search("  report   2024  ", 100).total == 1);
+
         // ---- statistics helpers ----
         Check("directory count (6 unique)", index.DirectoryCount == 6);
         var topExt = index.TopExtensions(5);

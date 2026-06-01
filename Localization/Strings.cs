@@ -12,7 +12,7 @@ internal static class Strings
         // Menu
         ["MenuFile"] = "_File",
         ["MenuOpenCacheFolder"] = "Open Cache Folder",
-        ["MenuPreferences"] = "Preferences…",
+        ["MenuPreferences"] = "Settings…",
         ["MenuExit"] = "E_xit",
         ["MenuView"] = "_View",
         ["MenuStatistics"] = "Index Statistics…",
@@ -128,7 +128,7 @@ internal static class Strings
         ["StatsNoExt"] = "(no extension)",
 
         // Preferences dialog
-        ["PrefTitle"] = "Preferences",
+        ["PrefTitle"] = "Settings",
         ["PrefSubtitle"] = "Choose your default search engine and language.",
         ["PrefDefaultEngine"] = "DEFAULT SEARCH ENGINE",
         ["PrefEngineMasm"] = "MASM — hand-written assembly (fastest)",
@@ -148,7 +148,7 @@ internal static class Strings
         // Menu
         ["MenuFile"] = "_Archivo",
         ["MenuOpenCacheFolder"] = "Abrir carpeta de caché",
-        ["MenuPreferences"] = "Preferencias…",
+        ["MenuPreferences"] = "Configuración…",
         ["MenuExit"] = "_Salir",
         ["MenuView"] = "_Ver",
         ["MenuStatistics"] = "Estadísticas del índice…",
@@ -264,7 +264,7 @@ internal static class Strings
         ["StatsNoExt"] = "(sin extensión)",
 
         // Preferences dialog
-        ["PrefTitle"] = "Preferencias",
+        ["PrefTitle"] = "Configuración",
         ["PrefSubtitle"] = "Elige tu motor de búsqueda e idioma predeterminados.",
         ["PrefDefaultEngine"] = "MOTOR DE BÚSQUEDA PREDETERMINADO",
         ["PrefEngineMasm"] = "MASM — ensamblador propio (el más rápido)",
