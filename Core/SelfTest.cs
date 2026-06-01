@@ -66,6 +66,13 @@ internal static class SelfTest
         Check("'*' matches everything", index.Search("*", 100).total == data.Length);
         Check("'*.xyz' no match", index.Search("*.xyz", 100).total == 0);
         Check("'program.cs' no wildcard still works", index.Search("program.cs", 100).total == 1);
+
+        // ---- statistics helpers ----
+        Check("directory count (6 unique)", index.DirectoryCount == 6);
+        var topExt = index.TopExtensions(5);
+        Check("top extension is .dll x2",
+            topExt.Count > 0 && topExt[0].Ext == ".dll" && topExt[0].Count == 2);
+        Check("memory estimate > 0", index.ApproxMemoryBytes > 0);
         Check("single char 'a' broad", index.Search("a", 100).total >= 4);
         Check("limit caps hits but not total", index.Search("a", 2).hits.Count == 2);
 

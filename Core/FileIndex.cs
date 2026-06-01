@@ -57,6 +57,57 @@ public sealed class FileIndex
         return dir.EndsWith('\\') ? dir + name : dir + "\\" + name;
     }
 
+    /// <summary>Number of unique directories referenced by the index.</summary>
+    public int DirectoryCount => _dirs.Length;
+
+    /// <summary>
+    /// Approximate RAM held by the index: the flat blobs plus the directory
+    /// string table. Good enough to show the user the order of magnitude.
+    /// </summary>
+    public long ApproxMemoryBytes
+    {
+        get
+        {
+            long bytes = (long)_dirIds.Length * sizeof(int)
+                       + (long)_nameOff.Length * sizeof(int)
+                       + (long)_lowerOff.Length * sizeof(int)
+                       + (long)_nameChars.Length * sizeof(char)
+                       + _lowerBytes.Length;
+            foreach (string d in _dirs) bytes += 24 + (long)d.Length * sizeof(char); // obj overhead + chars
+            return bytes;
+        }
+    }
+
+    /// <summary>
+    /// Tallies file extensions across the whole index and returns the most
+    /// common ones. Files without an extension are grouped as "(no extension)".
+    /// </summary>
+    public List<(string Ext, int Count)> TopExtensions(int top)
+    {
+        var map = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+        for (int i = 0; i < Count; i++)
+        {
+            int s = _nameOff[i], e = _nameOff[i + 1];
+            int dot = -1;
+            for (int j = e - 1; j >= s; j--)
+            {
+                char c = _nameChars[j];
+                if (c == '.') { dot = j; break; }
+                if (c == '\\' || c == '/') break;
+            }
+            string ext = (dot >= 0 && dot < e - 1)
+                ? new string(_nameChars, dot, e - dot).ToLowerInvariant()
+                : "(no extension)";
+            map.TryGetValue(ext, out int cnt);
+            map[ext] = cnt + 1;
+        }
+        var list = new List<(string, int)>(map.Count);
+        foreach (var kv in map) list.Add((kv.Key, kv.Value));
+        list.Sort((a, b) => b.Item2.CompareTo(a.Item2));
+        if (list.Count > top) list.RemoveRange(top, list.Count - top);
+        return list;
+    }
+
     /// <summary>
     /// Runs the SIMD substring search across every name in parallel and returns
     /// the matching record indices (capped at <paramref name="limit"/>) plus the

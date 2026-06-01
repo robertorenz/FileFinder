@@ -16,11 +16,37 @@
         <vm:MainViewModel/>
     </Window.DataContext>
 
-    <Grid>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="288"/>
-            <ColumnDefinition Width="*"/>
-        </Grid.ColumnDefinitions>
+    <Window.InputBindings>
+        <KeyBinding Modifiers="Control" Key="I" Command="{Binding ShowStatisticsCommand}"/>
+    </Window.InputBindings>
+
+    <DockPanel LastChildFill="True">
+
+        <!-- ============ Menu bar ============ -->
+        <Border DockPanel.Dock="Top" Background="{StaticResource SurfaceBrush}"
+                BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1">
+            <Menu Background="Transparent" Foreground="{StaticResource TextBrush}"
+                  Padding="6,3" FontSize="12.5">
+                <MenuItem Header="_File">
+                    <MenuItem Header="Open Cache Folder" Command="{Binding OpenCacheFolderCommand}"/>
+                    <Separator/>
+                    <MenuItem Header="E_xit" Click="Exit_Click"/>
+                </MenuItem>
+                <MenuItem Header="_View">
+                    <MenuItem Header="Index Statistics…" Command="{Binding ShowStatisticsCommand}"
+                              InputGestureText="Ctrl+I"/>
+                </MenuItem>
+                <MenuItem Header="_Help">
+                    <MenuItem Header="About FileFinder" Command="{Binding AboutCommand}"/>
+                </MenuItem>
+            </Menu>
+        </Border>
+
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="288"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
 
         <!-- ============ Sidebar ============ -->
         <Border Grid.Column="0" Background="{StaticResource SidebarBrush}">
@@ -176,5 +202,6 @@
                 </DataGrid>
             </Border>
         </DockPanel>
-    </Grid>
+        </Grid>
+    </DockPanel>
 </Window>

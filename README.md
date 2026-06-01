@@ -12,7 +12,7 @@ milliseconds.
 
 Grab the latest build from the [**Releases**](https://github.com/robertorenz/FileFinder/releases/latest) page:
 
-- **`FileFinder-Setup-1.0.1.exe`** — installer (Start Menu + optional desktop shortcut, uninstaller). Installs per-user without admin, or all-users with admin.
+- **`FileFinder-Setup-1.0.2.exe`** — installer (Start Menu + optional desktop shortcut, uninstaller). Installs per-user without admin, or all-users with admin.
 - **`FileFinder.exe`** — portable single file. No install, no .NET runtime required — just download and run.
 
 ## Highlights
@@ -32,6 +32,9 @@ Grab the latest build from the [**Releases**](https://github.com/robertorenz/Fil
   candidates. Searches run in parallel across all CPU cores.
 - **Cached index.** The index is saved to `%LocalAppData%\FileFinder\index.ffix`
   in a compact binary format and reloaded instantly on the next launch.
+- **Statistics view** (*View → Index Statistics…*, or `Ctrl+I`) shows the file
+  and folder counts, drives, RAM in use, cache file location and on-disk size,
+  and a breakdown of the most common file types.
 - **Case-insensitive & Unicode-aware** matching, with **wildcards**: plain text
   is a substring match, while `*` and `?` switch to whole-name glob matching
   (`*.gif`, `report*`, `IMG_????.jpg`).

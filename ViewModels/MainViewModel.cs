@@ -28,6 +28,9 @@ public sealed class MainViewModel : ObservableObject
     public RelayCommand OpenFileCommand { get; }
     public RelayCommand OpenFolderCommand { get; }
     public RelayCommand ClearIndexCommand { get; }
+    public RelayCommand ShowStatisticsCommand { get; }
+    public RelayCommand OpenCacheFolderCommand { get; }
+    public RelayCommand AboutCommand { get; }
 
     public MainViewModel()
     {
@@ -37,6 +40,10 @@ public sealed class MainViewModel : ObservableObject
         OpenFileCommand = new RelayCommand(OpenFile);
         OpenFolderCommand = new RelayCommand(OpenFolder);
         ClearIndexCommand = new RelayCommand(_ => ClearIndex(), _ => _index != null && !IsIndexing);
+        ShowStatisticsCommand = new RelayCommand(_ =>
+            StatisticsDialog.Show(Application.Current.MainWindow, _index, IndexCache.IndexPath));
+        OpenCacheFolderCommand = new RelayCommand(_ => OpenCacheFolder());
+        AboutCommand = new RelayCommand(_ => ShowAbout());
 
         LoadDrives();
         _ = LoadCachedIndexAsync();
@@ -291,6 +298,25 @@ public sealed class MainViewModel : ObservableObject
         {
             ModalDialog.Show(Application.Current.MainWindow, "Cannot open folder", ex.Message);
         }
+    }
+
+    private void OpenCacheFolder()
+    {
+        try { Process.Start(new ProcessStartInfo(IndexCache.Directory) { UseShellExecute = true }); }
+        catch (Exception ex)
+        {
+            ModalDialog.Show(Application.Current.MainWindow, "Cannot open cache folder", ex.Message);
+        }
+    }
+
+    private void ShowAbout()
+    {
+        var v = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
+        string ver = v is null ? "1.0" : $"{v.Major}.{v.Minor}.{v.Build}";
+        ModalDialog.Show(Application.Current.MainWindow, "About FileFinder",
+            $"FileFinder {ver}\n\n" +
+            "SIMD-accelerated disk search for Windows (C# / WPF, .NET 9).\n\n" +
+            $"AVX2 hardware search: {(Core.SimdSearch.HardwareAccelerated ? "enabled" : "scalar fallback")}.");
     }
 
     private void RestartElevated()

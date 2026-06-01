@@ -22,4 +22,6 @@ public partial class MainWindow : Window
             vm.OpenFileCommand.Execute(row);
         }
     }
+
+    private void Exit_Click(object sender, RoutedEventArgs e) => Application.Current.Shutdown();
 }
