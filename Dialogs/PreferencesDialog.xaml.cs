@@ -14,6 +14,7 @@ public partial class PreferencesDialog : Window
 {
     private readonly string _originalLanguage;
     private readonly Action? _onRestartAdmin;
+    private readonly Action? _onClear;
     private readonly AppSettings _settings;
     private readonly Dictionary<object, bool> _driveSnapshot = new();
     private readonly (bool Folder, bool Type, bool Size, bool Modified, bool Attributes) _columnSnapshot;
@@ -24,13 +25,14 @@ public partial class PreferencesDialog : Window
     public PrefResult Result { get; private set; } = PrefResult.Cancel;
 
     private PreferencesDialog(SearchEngine engine, bool masmAvailable, string language,
-        IEnumerable drives, bool isElevated, Action? onRestartAdmin, AppSettings settings)
+        IEnumerable drives, bool isElevated, Action? onRestartAdmin, Action? onClear, AppSettings settings)
     {
         InitializeComponent();
         MouseLeftButtonDown += (_, e) => { if (e.ButtonState == MouseButtonState.Pressed) DragMove(); };
 
         _originalLanguage = language;
         _onRestartAdmin = onRestartAdmin;
+        _onClear = onClear;
         _settings = settings;
         SelectedEngine = engine;
         SelectedLanguage = language;
@@ -59,9 +61,11 @@ public partial class PreferencesDialog : Window
 
     /// <summary>Shows the dialog. Engine/language are written back unless the user cancelled.</summary>
     public static PrefResult Show(Window? owner, ref SearchEngine engine, bool masmAvailable,
-        ref string language, IEnumerable drives, bool isElevated, Action? onRestartAdmin, AppSettings settings)
+        ref string language, IEnumerable drives, bool isElevated, Action? onRestartAdmin,
+        Action? onClear, AppSettings settings)
     {
-        var d = new PreferencesDialog(engine, masmAvailable, language, drives, isElevated, onRestartAdmin, settings)
+        var d = new PreferencesDialog(engine, masmAvailable, language, drives, isElevated,
+            onRestartAdmin, onClear, settings)
         {
             Owner = owner ?? Application.Current?.MainWindow
         };
@@ -98,7 +102,8 @@ public partial class PreferencesDialog : Window
     private void RestartAdmin_Click(object sender, RoutedEventArgs e) => _onRestartAdmin?.Invoke();
 
     private void Build_Click(object sender, RoutedEventArgs e) => Close(PrefResult.Build);
-    private void Clear_Click(object sender, RoutedEventArgs e) => Close(PrefResult.Clear);
+    // Clear happens in place so the dialog stays open to reselect drives / rebuild.
+    private void Clear_Click(object sender, RoutedEventArgs e) => _onClear?.Invoke();
     private void Benchmark_Click(object sender, RoutedEventArgs e) => Close(PrefResult.Benchmark);
     private void Save_Click(object sender, RoutedEventArgs e) => Close(PrefResult.Save);
 

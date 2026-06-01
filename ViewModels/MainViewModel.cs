@@ -87,7 +87,7 @@ public sealed class MainViewModel : ObservableObject
         var engine = _engine;
         string lang = _settings.Language;
         var result = PreferencesDialog.Show(Application.Current.MainWindow, ref engine, MasmAvailable,
-            ref lang, Drives, IsElevated, IsElevated ? null : RestartElevated, _settings);
+            ref lang, Drives, IsElevated, IsElevated ? null : RestartElevated, ClearIndex, _settings);
 
         if (result == PrefResult.Cancel) return;
 
@@ -109,11 +109,15 @@ public sealed class MainViewModel : ObservableObject
         switch (result)
         {
             case PrefResult.Build: _ = BuildIndexAsync(); break;
-            case PrefResult.Clear: ClearIndex(); break;
             case PrefResult.Benchmark: _ = RunBenchmarkAsync(); break;
             default: if (!string.IsNullOrEmpty(Query)) ScheduleSearch(); break; // refresh metadata
         }
     }
+
+    /// <summary>The currently active window (e.g. the open Preferences dialog), for dialog ownership.</summary>
+    private static Window ActiveOwner() =>
+        Application.Current.Windows.OfType<Window>().FirstOrDefault(w => w.IsActive)
+        ?? Application.Current.MainWindow;
 
     private void OnLanguageChanged()
     {
@@ -332,7 +336,7 @@ public sealed class MainViewModel : ObservableObject
 
     private void ClearIndex()
     {
-        if (!ModalDialog.Confirm(Application.Current.MainWindow, L("ClearTitle"),
+        if (!ModalDialog.Confirm(ActiveOwner(), L("ClearTitle"),
                 L("ClearMsg"), L("ClearConfirm")))
             return;
 
