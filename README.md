@@ -8,6 +8,13 @@ milliseconds.
 
 ![status](https://img.shields.io/badge/build-passing-16A34A) ![dotnet](https://img.shields.io/badge/.NET-9.0-2563EB)
 
+## Download
+
+Grab the latest build from the [**Releases**](https://github.com/robertorenz/FileFinder/releases/latest) page:
+
+- **`FileFinder-Setup-1.0.0.exe`** — installer (Start Menu + optional desktop shortcut, uninstaller). Installs per-user without admin, or all-users with admin.
+- **`FileFinder.exe`** — portable single file. No install, no .NET runtime required — just download and run.
+
 ## Highlights
 
 - **Two indexing engines, picked automatically per drive**
