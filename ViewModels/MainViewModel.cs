@@ -32,6 +32,13 @@ public sealed class MainViewModel : ObservableObject
     public RelayCommand RestartAsAdminCommand { get; }
     public RelayCommand OpenFileCommand { get; }
     public RelayCommand OpenFolderCommand { get; }
+    public RelayCommand OpenWithCommand { get; }
+    public RelayCommand CopyFileCommand { get; }
+    public RelayCommand CopyFullPathCommand { get; }
+    public RelayCommand CopyFolderPathCommand { get; }
+    public RelayCommand CopyFileNameCommand { get; }
+    public RelayCommand CopyNameNoExtCommand { get; }
+    public RelayCommand PropertiesCommand { get; }
     public RelayCommand ClearIndexCommand { get; }
     public RelayCommand ShowStatisticsCommand { get; }
     public RelayCommand OpenCacheFolderCommand { get; }
@@ -51,6 +58,14 @@ public sealed class MainViewModel : ObservableObject
         RestartAsAdminCommand = new RelayCommand(_ => RestartElevated(), _ => !IsElevated);
         OpenFileCommand = new RelayCommand(OpenFile);
         OpenFolderCommand = new RelayCommand(OpenFolder);
+        OpenWithCommand = new RelayCommand(OpenWith);
+        CopyFileCommand = new RelayCommand(CopyFileToClipboard);
+        CopyFullPathCommand = new RelayCommand(p => CopyText((p as FileRow)?.FullPath));
+        CopyFolderPathCommand = new RelayCommand(p => CopyText((p as FileRow)?.Directory));
+        CopyFileNameCommand = new RelayCommand(p => CopyText((p as FileRow)?.Name));
+        CopyNameNoExtCommand = new RelayCommand(p =>
+            CopyText(p is FileRow r ? Path.GetFileNameWithoutExtension(r.Name) : null));
+        PropertiesCommand = new RelayCommand(ShowProperties);
         ClearIndexCommand = new RelayCommand(_ => ClearIndex(), _ => _index != null && !IsIndexing);
         ShowStatisticsCommand = new RelayCommand(_ =>
             StatisticsDialog.Show(Application.Current.MainWindow, _index, IndexCache.IndexPath));
@@ -531,6 +546,47 @@ public sealed class MainViewModel : ObservableObject
         {
             ModalDialog.Show(Application.Current.MainWindow, L("CannotOpenFolder"), ex.Message);
         }
+    }
+
+    private void OpenWith(object? param)
+    {
+        if (param is not FileRow row) return;
+        try { Process.Start(new ProcessStartInfo(row.FullPath) { UseShellExecute = true, Verb = "openas" }); }
+        catch (Exception ex)
+        {
+            ModalDialog.Show(Application.Current.MainWindow, L("CannotOpenFile"), ex.Message);
+        }
+    }
+
+    private void ShowProperties(object? param)
+    {
+        if (param is not FileRow row) return;
+        try { Core.ShellOps.ShowFileProperties(row.FullPath); }
+        catch (Exception ex)
+        {
+            ModalDialog.Show(Application.Current.MainWindow, L("CannotOpenFile"), ex.Message);
+        }
+    }
+
+    private void CopyFileToClipboard(object? param)
+    {
+        if (param is not FileRow row) return;
+        try
+        {
+            var files = new System.Collections.Specialized.StringCollection { row.FullPath };
+            Clipboard.SetFileDropList(files);
+        }
+        catch (Exception ex)
+        {
+            ModalDialog.Show(Application.Current.MainWindow, L("CannotOpenFile"), ex.Message);
+        }
+    }
+
+    private static void CopyText(string? text)
+    {
+        if (string.IsNullOrEmpty(text)) return;
+        try { Clipboard.SetText(text); }
+        catch { try { Clipboard.SetDataObject(text, true); } catch { /* clipboard busy */ } }
     }
 
     private void OpenCacheFolder()

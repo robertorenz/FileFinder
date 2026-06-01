@@ -142,11 +142,36 @@
                       MouseDoubleClick="ResultsGrid_MouseDoubleClick">
                 <DataGrid.Resources>
                     <ContextMenu x:Key="RowMenu">
-                        <MenuItem Header="{l:Loc CtxOpenFile}"
-                                  Command="{Binding DataContext.OpenFileCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                        <MenuItem Header="{l:Loc CtxOpenFile}" FontWeight="SemiBold"
+                                  Command="{Binding Data.OpenFileCommand, Source={StaticResource proxy}}"
+                                  CommandParameter="{Binding}"/>
+                        <MenuItem Header="{l:Loc CtxOpenWith}"
+                                  Command="{Binding Data.OpenWithCommand, Source={StaticResource proxy}}"
                                   CommandParameter="{Binding}"/>
                         <MenuItem Header="{l:Loc CtxOpenFolder}"
-                                  Command="{Binding DataContext.OpenFolderCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                  Command="{Binding Data.OpenFolderCommand, Source={StaticResource proxy}}"
+                                  CommandParameter="{Binding}"/>
+                        <Separator/>
+                        <MenuItem Header="{l:Loc CtxCopy}">
+                            <MenuItem Header="{l:Loc CtxCopyFile}"
+                                      Command="{Binding Data.CopyFileCommand, Source={StaticResource proxy}}"
+                                      CommandParameter="{Binding}"/>
+                            <MenuItem Header="{l:Loc CtxCopyFullPath}"
+                                      Command="{Binding Data.CopyFullPathCommand, Source={StaticResource proxy}}"
+                                      CommandParameter="{Binding}"/>
+                            <MenuItem Header="{l:Loc CtxCopyFolderPath}"
+                                      Command="{Binding Data.CopyFolderPathCommand, Source={StaticResource proxy}}"
+                                      CommandParameter="{Binding}"/>
+                            <MenuItem Header="{l:Loc CtxCopyFileName}"
+                                      Command="{Binding Data.CopyFileNameCommand, Source={StaticResource proxy}}"
+                                      CommandParameter="{Binding}"/>
+                            <MenuItem Header="{l:Loc CtxCopyNameNoExt}"
+                                      Command="{Binding Data.CopyNameNoExtCommand, Source={StaticResource proxy}}"
+                                      CommandParameter="{Binding}"/>
+                        </MenuItem>
+                        <Separator/>
+                        <MenuItem Header="{l:Loc CtxProperties}"
+                                  Command="{Binding Data.PropertiesCommand, Source={StaticResource proxy}}"
                                   CommandParameter="{Binding}"/>
                     </ContextMenu>
                 </DataGrid.Resources>
