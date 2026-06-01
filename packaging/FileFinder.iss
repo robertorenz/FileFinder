@@ -6,7 +6,7 @@
 ;     -p:EnableCompressionInSingleFile=true -p:DebugType=none -o ..\..\publish
 
 #define AppName "FileFinder"
-#define AppVersion "1.0.14"
+#define AppVersion "1.0.15"
 #define AppPublisher "Roberto Renz"
 #define AppExe "FileFinder.exe"
 
@@ -19,6 +19,7 @@ AppPublisher={#AppPublisher}
 DefaultDirName={autopf}\{#AppName}
 DefaultGroupName={#AppName}
 UninstallDisplayIcon={app}\{#AppExe}
+SetupIconFile=..\FileFinder.ico
 OutputDir=..\..\installer
 OutputBaseFilename=FileFinder-Setup-{#AppVersion}
 Compression=lzma2/max

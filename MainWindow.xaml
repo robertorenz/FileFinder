@@ -11,6 +11,7 @@
         MinHeight="440" MinWidth="720"
         Background="{StaticResource BackgroundBrush}"
         FontFamily="Segoe UI"
+        Icon="FileFinder.ico"
         WindowStartupLocation="CenterScreen">
 
     <Window.DataContext>

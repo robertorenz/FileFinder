@@ -15,11 +15,14 @@
     <!-- App manifest declares asInvoker (no forced UAC) + per-monitor DPI -->
     <ApplicationManifest>app.manifest</ApplicationManifest>
 
+    <!-- App / window icon -->
+    <ApplicationIcon>FileFinder.ico</ApplicationIcon>
+
     <!-- Server GC helps when holding millions of file records in memory -->
     <ServerGarbageCollection>true</ServerGarbageCollection>
     <ConcurrentGarbageCollection>true</ConcurrentGarbageCollection>
 
-    <Version>1.0.14</Version>
+    <Version>1.0.15</Version>
   </PropertyGroup>
 
   <!-- Bundle the MASM DLL (if present) next to the exe and into single-file publish -->
@@ -28,6 +31,11 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Link>FileFinderAsm.dll</Link>
     </None>
+  </ItemGroup>
+
+  <!-- Window icon (referenced as a WPF resource by MainWindow) -->
+  <ItemGroup>
+    <Resource Include="FileFinder.ico" />
   </ItemGroup>
 
   <!-- Assemble native/search_asm.asm into FileFinderAsm.dll using MASM, if the
