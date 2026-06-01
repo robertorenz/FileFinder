@@ -50,6 +50,9 @@ public sealed class MainViewModel : ObservableObject
     public RelayCommand AboutCommand { get; }
     public RelayCommand BenchmarkCommand { get; }
     public RelayCommand PreferencesCommand { get; }
+    public RelayCommand DocumentationCommand { get; }
+
+    private const string DocsUrl = "https://github.com/robertorenz/FileFinder/blob/main/DOCS.md";
 
     public MainViewModel()
     {
@@ -83,6 +86,7 @@ public sealed class MainViewModel : ObservableObject
         AboutCommand = new RelayCommand(_ => ShowAbout());
         BenchmarkCommand = new RelayCommand(_ => _ = RunBenchmarkAsync(), _ => !IsIndexing);
         PreferencesCommand = new RelayCommand(_ => ShowPreferences());
+        DocumentationCommand = new RelayCommand(_ => OpenUrl(DocsUrl));
 
         _statusText = L("Ready");
         _indexSummary = L("NoIndexYet");
@@ -638,6 +642,15 @@ public sealed class MainViewModel : ObservableObject
         catch (Exception ex)
         {
             ModalDialog.Show(Application.Current.MainWindow, L("CannotOpenCache"), ex.Message);
+        }
+    }
+
+    private void OpenUrl(string url)
+    {
+        try { Process.Start(new ProcessStartInfo(url) { UseShellExecute = true }); }
+        catch (Exception ex)
+        {
+            ModalDialog.Show(Application.Current.MainWindow, L("CannotOpenFile"), ex.Message);
         }
     }
 

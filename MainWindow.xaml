@@ -53,6 +53,8 @@
                               InputGestureText="Ctrl+B"/>
                 </MenuItem>
                 <MenuItem Header="{l:Loc MenuHelp}">
+                    <MenuItem Header="{l:Loc MenuDocumentation}" Command="{Binding DocumentationCommand}"/>
+                    <Separator/>
                     <MenuItem Header="{l:Loc MenuAbout}" Command="{Binding AboutCommand}"/>
                 </MenuItem>
             </Menu>
