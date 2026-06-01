@@ -105,6 +105,17 @@ Verify the search engine:
 .\bin\Debug\net9.0-windows\FileFinder.exe --selftest
 ```
 
+Measure where indexing time actually goes (disk/syscalls vs. the CPU
+name-normalization kernel) for any folder:
+
+```powershell
+.\bin\Debug\net9.0-windows\FileFinder.exe --benchindex C:\Windows
+```
+
+On a typical drive ~97% of indexing is disk + `FindNextFile` syscalls and under
+1% is the (assembly-accelerable) normalization kernel — which is why the
+hand-written assembly lives in the **search** path, not the indexer.
+
 ## Usage
 
 1. Tick the drives to index in the left sidebar.

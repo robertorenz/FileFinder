@@ -16,6 +16,12 @@ public partial class App : Application
             Shutdown(code);
             return;
         }
+        if (e.Args.Length > 0 && e.Args[0] == "--benchindex")
+        {
+            int code = IndexBench.Run(e.Args.Length > 1 ? e.Args[1] : null);
+            Shutdown(code);
+            return;
+        }
         base.OnStartup(e);
     }
 }
