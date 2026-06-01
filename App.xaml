@@ -153,8 +153,8 @@
 
             <Style TargetType="DataGridColumnHeader">
                 <Setter Property="Background" Value="{StaticResource SurfaceBrush}"/>
-                <Setter Property="Foreground" Value="{StaticResource TextBrush}"/>
-                <Setter Property="FontWeight" Value="Bold"/>
+                <Setter Property="Foreground" Value="{StaticResource MutedBrush}"/>
+                <Setter Property="FontWeight" Value="Normal"/>
                 <Setter Property="FontSize" Value="12"/>
                 <Setter Property="Padding" Value="14,10"/>
                 <Setter Property="HorizontalContentAlignment" Value="Left"/>
@@ -181,10 +181,14 @@
                                 <Trigger Property="SortDirection" Value="Ascending">
                                     <Setter TargetName="SortArrow" Property="Text" Value="▲"/>
                                     <Setter TargetName="SortArrow" Property="Visibility" Value="Visible"/>
+                                    <Setter Property="FontWeight" Value="Bold"/>
+                                    <Setter Property="Foreground" Value="{StaticResource TextBrush}"/>
                                 </Trigger>
                                 <Trigger Property="SortDirection" Value="Descending">
                                     <Setter TargetName="SortArrow" Property="Text" Value="▼"/>
                                     <Setter TargetName="SortArrow" Property="Visibility" Value="Visible"/>
+                                    <Setter Property="FontWeight" Value="Bold"/>
+                                    <Setter Property="Foreground" Value="{StaticResource TextBrush}"/>
                                 </Trigger>
                                 <Trigger Property="IsMouseOver" Value="True">
                                     <Setter Property="Foreground" Value="{StaticResource PrimaryBrush}"/>
