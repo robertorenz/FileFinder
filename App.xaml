@@ -134,36 +134,51 @@
                 </Setter>
             </Style>
 
-            <!-- ============ DataGrid ============ -->
+            <!-- ============ DataGrid (clean, borderless rows) ============ -->
             <Style TargetType="DataGrid">
                 <Setter Property="Background" Value="{StaticResource SurfaceBrush}"/>
-                <Setter Property="RowBackground" Value="{StaticResource SurfaceBrush}"/>
-                <Setter Property="AlternatingRowBackground" Value="#F8FAFC"/>
+                <Setter Property="RowBackground" Value="Transparent"/>
                 <Setter Property="BorderThickness" Value="0"/>
-                <Setter Property="GridLinesVisibility" Value="Horizontal"/>
-                <Setter Property="HorizontalGridLinesBrush" Value="{StaticResource BorderBrush}"/>
-                <Setter Property="RowHeight" Value="30"/>
+                <Setter Property="GridLinesVisibility" Value="None"/>
+                <Setter Property="RowHeight" Value="32"/>
                 <Setter Property="FontSize" Value="13"/>
                 <Setter Property="Foreground" Value="{StaticResource TextBrush}"/>
                 <Setter Property="HeadersVisibility" Value="Column"/>
+                <Setter Property="SelectionUnit" Value="FullRow"/>
                 <Setter Property="EnableRowVirtualization" Value="True"/>
                 <Setter Property="EnableColumnVirtualization" Value="True"/>
             </Style>
 
             <Style TargetType="DataGridColumnHeader">
-                <Setter Property="Background" Value="#F8FAFC"/>
+                <Setter Property="Background" Value="{StaticResource SurfaceBrush}"/>
                 <Setter Property="Foreground" Value="{StaticResource MutedBrush}"/>
                 <Setter Property="FontWeight" Value="SemiBold"/>
                 <Setter Property="FontSize" Value="12"/>
-                <Setter Property="Padding" Value="12,8"/>
+                <Setter Property="Padding" Value="14,10"/>
                 <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}"/>
                 <Setter Property="BorderThickness" Value="0,0,0,1"/>
                 <Setter Property="HorizontalContentAlignment" Value="Left"/>
+                <Setter Property="SeparatorVisibility" Value="Collapsed"/>
+            </Style>
+
+            <!-- Whole-row hover + selection; no per-cell boxes or gridlines -->
+            <Style TargetType="DataGridRow">
+                <Setter Property="Background" Value="Transparent"/>
+                <Style.Triggers>
+                    <Trigger Property="IsMouseOver" Value="True">
+                        <Setter Property="Background" Value="#F1F5F9"/>
+                    </Trigger>
+                    <Trigger Property="IsSelected" Value="True">
+                        <Setter Property="Background" Value="#DBEAFE"/>
+                    </Trigger>
+                </Style.Triggers>
             </Style>
 
             <Style TargetType="DataGridCell">
                 <Setter Property="BorderThickness" Value="0"/>
-                <Setter Property="Padding" Value="12,0"/>
+                <Setter Property="Background" Value="Transparent"/>
+                <Setter Property="Foreground" Value="{StaticResource TextBrush}"/>
+                <Setter Property="Padding" Value="14,0"/>
                 <Setter Property="VerticalAlignment" Value="Center"/>
                 <Setter Property="Template">
                     <Setter.Value>
@@ -174,12 +189,6 @@
                         </ControlTemplate>
                     </Setter.Value>
                 </Setter>
-                <Style.Triggers>
-                    <Trigger Property="IsSelected" Value="True">
-                        <Setter Property="Background" Value="#DBEAFE"/>
-                        <Setter Property="Foreground" Value="{StaticResource TextBrush}"/>
-                    </Trigger>
-                </Style.Triggers>
             </Style>
 
             <!-- ============ Drive checkbox list item ============ -->

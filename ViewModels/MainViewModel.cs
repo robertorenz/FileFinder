@@ -76,23 +76,31 @@ public sealed class MainViewModel : ObservableObject
     {
         var engine = _engine;
         string lang = _settings.Language;
-        var (saved, benchmark) = PreferencesDialog.Show(Application.Current.MainWindow, ref engine, MasmAvailable, ref lang);
-        if (saved)
+        var result = PreferencesDialog.Show(Application.Current.MainWindow, ref engine, MasmAvailable,
+            ref lang, Drives, IsElevated, IsElevated ? null : RestartElevated);
+
+        if (result == PrefResult.Cancel) return;
+
+        _settings.DefaultEngine = engine;
+        _settings.Language = lang;
+        _settings.IndexedDrives = Drives.Where(d => d.IsSelected).Select(d => d.Root).ToList();
+        _settings.Save();
+
+        Loc.Instance.CurrentLanguage = lang;
+        if (engine != _engine)
         {
-            _settings.DefaultEngine = engine;
-            _settings.Language = lang;
-            _settings.Save();
+            _engine = engine;
+            OnPropertyChanged(nameof(EngineIsJit));
+            OnPropertyChanged(nameof(EngineIsMasm));
+        }
+        RaiseCommands();
 
-            Loc.Instance.CurrentLanguage = lang;
-            if (engine != _engine)
-            {
-                _engine = engine;
-                OnPropertyChanged(nameof(EngineIsJit));
-                OnPropertyChanged(nameof(EngineIsMasm));
-                if (!string.IsNullOrEmpty(Query)) ScheduleSearch();
-            }
-
-            if (benchmark) _ = RunBenchmarkAsync();
+        switch (result)
+        {
+            case PrefResult.Build: _ = BuildIndexAsync(); break;
+            case PrefResult.Clear: ClearIndex(); break;
+            case PrefResult.Benchmark: _ = RunBenchmarkAsync(); break;
+            default: if (!string.IsNullOrEmpty(Query)) ScheduleSearch(); break;
         }
     }
 
@@ -178,6 +186,9 @@ public sealed class MainViewModel : ObservableObject
 
     private void LoadDrives()
     {
+        var saved = _settings.IndexedDrives;
+        string? systemRoot = Path.GetPathRoot(Environment.SystemDirectory);
+
         foreach (var di in DriveInfo.GetDrives())
         {
             try
@@ -186,15 +197,19 @@ public sealed class MainViewModel : ObservableObject
                 if (di.DriveType is not (DriveType.Fixed or DriveType.Removable or DriveType.Network))
                     continue;
 
+                string root = di.RootDirectory.FullName;
+                bool selected = saved.Count > 0
+                    ? saved.Contains(root)
+                    : string.Equals(root, systemRoot, StringComparison.OrdinalIgnoreCase);
+
                 string freeGb = (di.AvailableFreeSpace / 1024d / 1024 / 1024).ToString("0");
                 string vol = string.IsNullOrWhiteSpace(di.VolumeLabel) ? "Local Disk" : di.VolumeLabel;
                 Drives.Add(new DriveItem
                 {
-                    Root = di.RootDirectory.FullName,
+                    Root = root,
                     Format = di.DriveFormat,
                     Label = $"{di.Name.TrimEnd('\\')}  ({vol})  ·  {di.DriveFormat}, {freeGb} GB free",
-                    IsSelected = string.Equals(di.RootDirectory.FullName,
-                        Path.GetPathRoot(Environment.SystemDirectory), StringComparison.OrdinalIgnoreCase)
+                    IsSelected = selected
                 });
 
                 Drives[^1].PropertyChanged += (_, __) => RaiseCommands();

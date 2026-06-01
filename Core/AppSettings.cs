@@ -15,6 +15,9 @@ public sealed class AppSettings
     /// <summary>UI language code ("en", "es").</summary>
     public string Language { get; set; } = "en";
 
+    /// <summary>Drive roots the user selected to index (e.g. "C:\\"). Empty = default to system drive.</summary>
+    public List<string> IndexedDrives { get; set; } = new();
+
     [JsonIgnore]
     public static string Path => System.IO.Path.Combine(IndexCache.Directory, "settings.json");
 

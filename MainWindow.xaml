@@ -7,8 +7,8 @@
         xmlns:vm="clr-namespace:FileFinder.ViewModels"
         xmlns:l="clr-namespace:FileFinder.Localization"
         mc:Ignorable="d"
-        Title="{l:Loc WindowTitle}" Height="680" Width="1080"
-        MinHeight="480" MinWidth="820"
+        Title="{l:Loc WindowTitle}" Height="660" Width="1040"
+        MinHeight="440" MinWidth="720"
         Background="{StaticResource BackgroundBrush}"
         FontFamily="Segoe UI"
         WindowStartupLocation="CenterScreen">
@@ -31,6 +31,9 @@
             <Menu Background="Transparent" Foreground="{StaticResource TextBrush}"
                   Padding="6,3" FontSize="12.5">
                 <MenuItem Header="{l:Loc MenuFile}">
+                    <MenuItem Header="{l:Loc BuildIndex}" Command="{Binding IndexCommand}"/>
+                    <MenuItem Header="{l:Loc ClearIndex}" Command="{Binding ClearIndexCommand}"/>
+                    <Separator/>
                     <MenuItem Header="{l:Loc MenuOpenCacheFolder}" Command="{Binding OpenCacheFolderCommand}"/>
                     <MenuItem Header="{l:Loc MenuPreferences}" Command="{Binding PreferencesCommand}"
                               InputGestureText="Ctrl+,"/>
@@ -49,166 +52,108 @@
             </Menu>
         </Border>
 
-        <Grid>
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="288"/>
-                <ColumnDefinition Width="*"/>
-            </Grid.ColumnDefinitions>
-
-        <!-- ============ Sidebar ============ -->
-        <Border Grid.Column="0" Background="{StaticResource SidebarBrush}">
-            <DockPanel LastChildFill="True">
-
-                <!-- Brand -->
-                <StackPanel DockPanel.Dock="Top" Margin="22,24,22,18">
-                    <TextBlock Text="FileFinder" FontSize="22" FontWeight="Bold" Foreground="White"/>
-                    <TextBlock Text="{l:Loc BrandSubtitle}" FontSize="12"
-                               Foreground="#94A3B8" Margin="0,2,0,0"/>
-                </StackPanel>
-
-                <!-- Admin status pill -->
-                <Border DockPanel.Dock="Top" Margin="22,0,22,16" CornerRadius="7" Padding="12,9"
-                        Background="{StaticResource SidebarDeepBrush}">
-                    <StackPanel>
-                        <TextBlock Text="{Binding AdminStatusText}" Foreground="#CBD5E1"
-                                   FontSize="11.5" TextWrapping="Wrap"/>
-                        <Button Content="{l:Loc RestartAsAdmin}"
-                                Style="{StaticResource GhostButton}"
-                                Command="{Binding RestartAsAdminCommand}"
-                                Margin="0,10,0,0" HorizontalAlignment="Left"
-                                Visibility="{Binding IsElevated, Converter={StaticResource InverseBoolToVis}}"/>
-                    </StackPanel>
+        <!-- ============ Search bar ============ -->
+        <Border DockPanel.Dock="Top" Background="{StaticResource SurfaceBrush}"
+                BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1"
+                Padding="24,16">
+            <StackPanel>
+                <Border Background="{StaticResource BackgroundBrush}" CornerRadius="9"
+                        BorderBrush="{StaticResource BorderBrush}" BorderThickness="1"
+                        Padding="16,0" Height="48">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="🔍" FontSize="16" VerticalAlignment="Center"
+                                   Foreground="{StaticResource MutedBrush}" Margin="0,0,12,0"/>
+                        <Grid Grid.Column="1">
+                            <TextBox x:Name="SearchInput" Style="{StaticResource SearchBox}"
+                                     Text="{Binding Query, UpdateSourceTrigger=PropertyChanged, Delay=0}"/>
+                            <TextBlock Text="{l:Loc SearchPlaceholder}"
+                                       Foreground="{StaticResource MutedBrush}" FontSize="15"
+                                       VerticalAlignment="Center" IsHitTestVisible="False">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding Text, ElementName=SearchInput}" Value="">
+                                                <Setter Property="Visibility" Value="Visible"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+                        </Grid>
+                        <Button Grid.Column="2" Content="{l:Loc MenuPreferences}" Height="32" Padding="14,0"
+                                Style="{StaticResource SecondaryButton}" VerticalAlignment="Center"
+                                Command="{Binding PreferencesCommand}"/>
+                    </Grid>
                 </Border>
 
-                <!-- Drives header -->
-                <TextBlock DockPanel.Dock="Top" Text="{l:Loc DrivesToIndex}" Margin="22,4,22,8"
-                           FontSize="11" FontWeight="SemiBold" Foreground="#64748B"/>
-
-                <!-- Action buttons pinned to bottom (declared first => bottom-most) -->
-                <StackPanel DockPanel.Dock="Bottom" Margin="22,12,22,22">
-                    <Button Content="{l:Loc BuildIndex}" Style="{StaticResource PrimaryButton}"
-                            Command="{Binding IndexCommand}" Height="40"
-                            Visibility="{Binding IsIndexing, Converter={StaticResource InverseBoolToVis}}"/>
-                    <Button Content="{l:Loc CancelIndexing}" Style="{StaticResource GhostButton}"
-                            Command="{Binding CancelCommand}" Height="40"
-                            Visibility="{Binding IsIndexing, Converter={StaticResource BoolToVis}}"/>
-                    <Button Content="{l:Loc ClearIndex}" Style="{StaticResource GhostButton}"
-                            Command="{Binding ClearIndexCommand}" Height="34" Margin="0,8,0,0"/>
-                </StackPanel>
-
-                <!-- Drive list -->
-                <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="14,0,14,0">
-                    <ItemsControl ItemsSource="{Binding Drives}" Margin="8,0">
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <CheckBox Style="{StaticResource DriveCheckBox}"
-                                          IsChecked="{Binding IsSelected}"
-                                          Content="{Binding Label}"/>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                </ScrollViewer>
-            </DockPanel>
+                <Grid Margin="2,12,2,0">
+                    <TextBlock Text="{Binding IndexSummary}" Foreground="{StaticResource MutedBrush}"
+                               FontSize="12.5" VerticalAlignment="Center"/>
+                    <TextBlock Text="{Binding ResultCountText}" Foreground="{StaticResource PrimaryBrush}"
+                               FontWeight="SemiBold" FontSize="12.5" HorizontalAlignment="Right"
+                               VerticalAlignment="Center"/>
+                </Grid>
+            </StackPanel>
         </Border>
 
-        <!-- ============ Main content ============ -->
-        <DockPanel Grid.Column="1" LastChildFill="True">
-
-            <!-- Search bar -->
-            <Border DockPanel.Dock="Top" Background="{StaticResource SurfaceBrush}"
-                    BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1"
-                    Padding="24,18">
-                <StackPanel>
-                    <Border Background="{StaticResource BackgroundBrush}" CornerRadius="9"
-                            BorderBrush="{StaticResource BorderBrush}" BorderThickness="1"
-                            Padding="16,0" Height="48">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Grid.Column="0" Text="🔍" FontSize="16" VerticalAlignment="Center"
-                                       Foreground="{StaticResource MutedBrush}" Margin="0,0,12,0"/>
-                            <Grid Grid.Column="1">
-                                <TextBox x:Name="SearchInput" Style="{StaticResource SearchBox}"
-                                         Text="{Binding Query, UpdateSourceTrigger=PropertyChanged, Delay=0}"/>
-                                <TextBlock Text="{l:Loc SearchPlaceholder}"
-                                           Foreground="{StaticResource MutedBrush}" FontSize="15"
-                                           VerticalAlignment="Center" IsHitTestVisible="False">
-                                    <TextBlock.Style>
-                                        <Style TargetType="TextBlock">
-                                            <Setter Property="Visibility" Value="Collapsed"/>
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding Text, ElementName=SearchInput}" Value="">
-                                                    <Setter Property="Visibility" Value="Visible"/>
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </TextBlock.Style>
-                                </TextBlock>
-                            </Grid>
-                        </Grid>
-                    </Border>
-
-                    <Grid Margin="2,12,2,0">
-                        <TextBlock Text="{Binding IndexSummary}" Foreground="{StaticResource MutedBrush}"
-                                   FontSize="12.5" VerticalAlignment="Center"/>
-                        <TextBlock Text="{Binding ResultCountText}" Foreground="{StaticResource PrimaryBrush}"
-                                   FontWeight="SemiBold" FontSize="12.5" HorizontalAlignment="Right"
-                                   VerticalAlignment="Center"/>
-                    </Grid>
-                </StackPanel>
-            </Border>
-
-            <!-- Status / progress bar -->
-            <Border DockPanel.Dock="Bottom" Background="{StaticResource SurfaceBrush}"
-                    BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,1,0,0"
-                    Padding="24,0" Height="38">
-                <Grid>
-                    <TextBlock Text="{Binding StatusText}" VerticalAlignment="Center"
-                               Foreground="{StaticResource MutedBrush}" FontSize="12"/>
-                    <ProgressBar Width="220" Height="6" HorizontalAlignment="Right" VerticalAlignment="Center"
+        <!-- ============ Status / progress bar ============ -->
+        <Border DockPanel.Dock="Bottom" Background="{StaticResource SurfaceBrush}"
+                BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,1,0,0"
+                Padding="24,0" Height="40">
+            <Grid>
+                <TextBlock Text="{Binding StatusText}" VerticalAlignment="Center"
+                           Foreground="{StaticResource MutedBrush}" FontSize="12"/>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center"
+                            Visibility="{Binding IsIndexing, Converter={StaticResource BoolToVis}}">
+                    <ProgressBar Width="180" Height="6" VerticalAlignment="Center"
                                  Background="{StaticResource BackgroundBrush}"
                                  Foreground="{StaticResource PrimaryBrush}" BorderThickness="0"
                                  IsIndeterminate="{Binding IsIndeterminate}"
-                                 Value="{Binding ProgressValue}" Maximum="100"
-                                 Visibility="{Binding IsIndexing, Converter={StaticResource BoolToVis}}"/>
-                </Grid>
-            </Border>
+                                 Value="{Binding ProgressValue}" Maximum="100"/>
+                    <Button Content="{l:Loc CancelIndexing}" Height="26" Padding="10,0" Margin="12,0,0,0"
+                            FontSize="11.5" Style="{StaticResource SecondaryButton}"
+                            Command="{Binding CancelCommand}"/>
+                </StackPanel>
+            </Grid>
+        </Border>
 
-            <!-- Results grid -->
-            <Border Margin="24,18,24,18" Background="{StaticResource SurfaceBrush}" CornerRadius="10"
-                    BorderBrush="{StaticResource BorderBrush}" BorderThickness="1">
-                <Border.Effect>
-                    <DropShadowEffect BlurRadius="14" ShadowDepth="2" Opacity="0.06" Color="#0F172A"/>
-                </Border.Effect>
-                <DataGrid x:Name="ResultsGrid" ItemsSource="{Binding Results}"
-                          AutoGenerateColumns="False" IsReadOnly="True"
-                          SelectionMode="Single" CanUserResizeRows="False"
-                          MouseDoubleClick="ResultsGrid_MouseDoubleClick">
-                    <DataGrid.Resources>
-                        <ContextMenu x:Key="RowMenu">
-                            <MenuItem Header="{l:Loc CtxOpenFile}"
-                                      Command="{Binding DataContext.OpenFileCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                      CommandParameter="{Binding}"/>
-                            <MenuItem Header="{l:Loc CtxOpenFolder}"
-                                      Command="{Binding DataContext.OpenFolderCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                      CommandParameter="{Binding}"/>
-                        </ContextMenu>
-                    </DataGrid.Resources>
-                    <DataGrid.RowStyle>
-                        <Style TargetType="DataGridRow">
-                            <Setter Property="ContextMenu" Value="{StaticResource RowMenu}"/>
-                        </Style>
-                    </DataGrid.RowStyle>
-                    <DataGrid.Columns>
-                        <DataGridTextColumn Header="{l:Loc ColName}" Binding="{Binding Name}" Width="2.2*"/>
-                        <DataGridTextColumn Header="{l:Loc ColFolder}" Binding="{Binding Directory}" Width="3*"/>
-                        <DataGridTextColumn Header="{l:Loc ColType}" Binding="{Binding Extension}" Width="0.7*"/>
-                    </DataGrid.Columns>
-                </DataGrid>
-            </Border>
-        </DockPanel>
-        </Grid>
+        <!-- ============ Results grid ============ -->
+        <Border Margin="24,18,24,18" Background="{StaticResource SurfaceBrush}" CornerRadius="10"
+                BorderBrush="{StaticResource BorderBrush}" BorderThickness="1">
+            <Border.Effect>
+                <DropShadowEffect BlurRadius="14" ShadowDepth="2" Opacity="0.06" Color="#0F172A"/>
+            </Border.Effect>
+            <DataGrid x:Name="ResultsGrid" ItemsSource="{Binding Results}"
+                      AutoGenerateColumns="False" IsReadOnly="True"
+                      SelectionMode="Single" CanUserResizeRows="False"
+                      MouseDoubleClick="ResultsGrid_MouseDoubleClick">
+                <DataGrid.Resources>
+                    <ContextMenu x:Key="RowMenu">
+                        <MenuItem Header="{l:Loc CtxOpenFile}"
+                                  Command="{Binding DataContext.OpenFileCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                  CommandParameter="{Binding}"/>
+                        <MenuItem Header="{l:Loc CtxOpenFolder}"
+                                  Command="{Binding DataContext.OpenFolderCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                  CommandParameter="{Binding}"/>
+                    </ContextMenu>
+                </DataGrid.Resources>
+                <DataGrid.RowStyle>
+                    <Style TargetType="DataGridRow" BasedOn="{StaticResource {x:Type DataGridRow}}">
+                        <Setter Property="ContextMenu" Value="{StaticResource RowMenu}"/>
+                    </Style>
+                </DataGrid.RowStyle>
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="{l:Loc ColName}" Binding="{Binding Name}" Width="2.2*"/>
+                    <DataGridTextColumn Header="{l:Loc ColFolder}" Binding="{Binding Directory}" Width="3*"/>
+                    <DataGridTextColumn Header="{l:Loc ColType}" Binding="{Binding Extension}" Width="0.7*"/>
+                </DataGrid.Columns>
+            </DataGrid>
+        </Border>
     </DockPanel>
 </Window>

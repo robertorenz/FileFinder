@@ -1,26 +1,34 @@
+using System.Collections;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using FileFinder.Core;
-using FileFinder.Localization;
+using Loc = FileFinder.Localization.Localization;
 
 namespace FileFinder.Dialogs;
+
+/// <summary>What the user asked for when the Preferences dialog closed.</summary>
+public enum PrefResult { Cancel, Save, Build, Clear, Benchmark }
 
 public partial class PreferencesDialog : Window
 {
     private readonly string _originalLanguage;
+    private readonly Action? _onRestartAdmin;
+    private readonly Dictionary<object, bool> _driveSnapshot = new();
     private bool _initialized;
 
     public SearchEngine SelectedEngine { get; private set; }
     public string SelectedLanguage { get; private set; }
-    public bool BenchmarkRequested { get; private set; }
+    public PrefResult Result { get; private set; } = PrefResult.Cancel;
 
-    private PreferencesDialog(SearchEngine engine, bool masmAvailable, string language)
+    private PreferencesDialog(SearchEngine engine, bool masmAvailable, string language,
+        IEnumerable drives, bool isElevated, Action? onRestartAdmin)
     {
         InitializeComponent();
         MouseLeftButtonDown += (_, e) => { if (e.ButtonState == MouseButtonState.Pressed) DragMove(); };
 
         _originalLanguage = language;
+        _onRestartAdmin = onRestartAdmin;
         SelectedEngine = engine;
         SelectedLanguage = language;
 
@@ -28,29 +36,34 @@ public partial class PreferencesDialog : Window
         MasmRadio.IsChecked = engine == SearchEngine.Masm && masmAvailable;
         JitRadio.IsChecked = !(engine == SearchEngine.Masm && masmAvailable);
 
-        LanguageCombo.ItemsSource = Localization.Localization.Languages;
+        DrivesList.ItemsSource = drives;
+        // Snapshot drive selection so Cancel can revert it.
+        foreach (var item in drives)
+            if (item is Models.DriveItem di) _driveSnapshot[di] = di.IsSelected;
+
+        AdminText.Text = isElevated ? Loc.Instance["AdminElevated"] : Loc.Instance["AdminStandard"];
+        RestartAdminButton.Visibility = isElevated ? Visibility.Collapsed : Visibility.Visible;
+
+        LanguageCombo.ItemsSource = Loc.Languages;
         LanguageCombo.SelectedValue = language;
         _initialized = true;
     }
 
-    /// <summary>
-    /// Shows the dialog. Returns whether the user saved, and whether they asked
-    /// to run the benchmark (which also applies the current selections).
-    /// </summary>
-    public static (bool Saved, bool Benchmark) Show(Window? owner, ref SearchEngine engine,
-        bool masmAvailable, ref string language)
+    /// <summary>Shows the dialog. Engine/language are written back unless the user cancelled.</summary>
+    public static PrefResult Show(Window? owner, ref SearchEngine engine, bool masmAvailable,
+        ref string language, IEnumerable drives, bool isElevated, Action? onRestartAdmin)
     {
-        var d = new PreferencesDialog(engine, masmAvailable, language)
+        var d = new PreferencesDialog(engine, masmAvailable, language, drives, isElevated, onRestartAdmin)
         {
             Owner = owner ?? Application.Current?.MainWindow
         };
-        bool saved = d.ShowDialog() == true;
-        if (saved)
+        d.ShowDialog();
+        if (d.Result != PrefResult.Cancel)
         {
             engine = d.SelectedEngine;
             language = d.SelectedLanguage;
         }
-        return (saved, d.BenchmarkRequested);
+        return d.Result;
     }
 
     private void Apply()
@@ -59,33 +72,36 @@ public partial class PreferencesDialog : Window
         SelectedLanguage = LanguageCombo.SelectedValue as string ?? "en";
     }
 
-    private void Benchmark_Click(object sender, RoutedEventArgs e)
+    private void Close(PrefResult result)
     {
         Apply();
-        BenchmarkRequested = true;
+        Result = result;
         DialogResult = true;
         Close();
     }
 
-    // Preview the language live as the user picks it.
     private void Language_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         if (!_initialized) return;
         if (LanguageCombo.SelectedValue is string code)
-            Localization.Localization.Instance.CurrentLanguage = code;
+            Loc.Instance.CurrentLanguage = code;
     }
 
-    private void Save_Click(object sender, RoutedEventArgs e)
-    {
-        Apply();
-        DialogResult = true;
-        Close();
-    }
+    private void RestartAdmin_Click(object sender, RoutedEventArgs e) => _onRestartAdmin?.Invoke();
+
+    private void Build_Click(object sender, RoutedEventArgs e) => Close(PrefResult.Build);
+    private void Clear_Click(object sender, RoutedEventArgs e) => Close(PrefResult.Clear);
+    private void Benchmark_Click(object sender, RoutedEventArgs e) => Close(PrefResult.Benchmark);
+    private void Save_Click(object sender, RoutedEventArgs e) => Close(PrefResult.Save);
 
     private void Cancel_Click(object sender, RoutedEventArgs e)
     {
-        // Revert the live language preview.
-        Localization.Localization.Instance.CurrentLanguage = _originalLanguage;
+        // Revert live previews: language + drive selection.
+        Loc.Instance.CurrentLanguage = _originalLanguage;
+        foreach (var kv in _driveSnapshot)
+            if (kv.Key is Models.DriveItem di) di.IsSelected = kv.Value;
+
+        Result = PrefResult.Cancel;
         DialogResult = false;
         Close();
     }

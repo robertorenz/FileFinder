@@ -12,7 +12,7 @@ milliseconds.
 
 Grab the latest build from the [**Releases**](https://github.com/robertorenz/FileFinder/releases/latest) page:
 
-- **`FileFinder-Setup-1.0.5.exe`** — installer (Start Menu + optional desktop shortcut, uninstaller). Installs per-user without admin, or all-users with admin.
+- **`FileFinder-Setup-1.0.6.exe`** — installer (Start Menu + optional desktop shortcut, uninstaller). Installs per-user without admin, or all-users with admin.
 - **`FileFinder.exe`** — portable single file. No install, no .NET runtime required — just download and run.
 
 ## Highlights
@@ -94,7 +94,7 @@ Indexing/
   DriveIndexer.cs  orchestrator: MFT with walk fallback + elevation check
 ViewModels/        MVVM (MainViewModel, RelayCommand, converters)
 Dialogs/           themed modal dialog
-MainWindow.xaml    UI (sidebar + search + results grid)
+MainWindow.xaml    UI (menu + search + results grid)
 ```
 
 ## Build & run
@@ -123,13 +123,15 @@ hand-written assembly lives in the **search** path, not the indexer.
 
 ## Usage
 
-1. Tick the drives to index in the left sidebar.
-2. Click **Build Index** (or **Restart as Administrator** first for the fast MFT
-   path on NTFS drives).
-3. Start typing in the search box — results and a live match count/timing appear
-   instantly.
-4. Double-click a row to open the file, or right-click → *Open containing
-   folder*.
+1. Open **File → Preferences…** (`Ctrl+,` or the *Preferences* button in the
+   search bar). Tick the drives to index, then click **Build Index** (or
+   **Restart as Administrator** first for the fast MFT path on NTFS drives).
+   The drive selection, default engine, and language are all set here and
+   remembered between launches.
+2. Start typing in the search box — results and a live match count/timing appear
+   instantly. The active engine (JIT/MASM) is shown in the result line.
+3. Double-click a row to open the file, or right-click → *Open containing
+   folder*. **Build Index** / **Clear Index** are also in the **File** menu.
 
 ## Requirements
 

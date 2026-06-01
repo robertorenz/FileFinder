@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:l="clr-namespace:FileFinder.Localization"
         WindowStartupLocation="CenterOwner"
-        SizeToContent="Height" Width="480"
+        SizeToContent="Height" Width="500" MaxHeight="760"
         ResizeMode="NoResize" ShowInTaskbar="False"
         WindowStyle="None" AllowsTransparency="True" Background="Transparent"
         Title="Preferences">
@@ -12,41 +12,18 @@
         <Border.Effect>
             <DropShadowEffect BlurRadius="24" ShadowDepth="4" Opacity="0.28" Color="#0F172A"/>
         </Border.Effect>
-        <StackPanel>
+        <DockPanel>
             <!-- Header -->
-            <Border CornerRadius="10,10,0,0" Padding="22,16" Background="{StaticResource PrimaryBrush}">
+            <Border DockPanel.Dock="Top" CornerRadius="10,10,0,0" Padding="22,16"
+                    Background="{StaticResource PrimaryBrush}">
                 <StackPanel>
                     <TextBlock Text="{l:Loc PrefTitle}" FontSize="16" FontWeight="SemiBold" Foreground="White"/>
                     <TextBlock Text="{l:Loc PrefSubtitle}" FontSize="12" Foreground="#BFDBFE" Margin="0,2,0,0"/>
                 </StackPanel>
             </Border>
 
-            <!-- Default engine -->
-            <StackPanel Margin="22,18,22,6">
-                <TextBlock Text="{l:Loc PrefDefaultEngine}" FontSize="11" FontWeight="SemiBold"
-                           Foreground="{StaticResource MutedBrush}" Margin="0,0,0,8"/>
-                <RadioButton x:Name="MasmRadio" GroupName="prefEngine" Content="{l:Loc PrefEngineMasm}"
-                             FontSize="13.5" Foreground="{StaticResource TextBrush}" Margin="0,3"/>
-                <RadioButton x:Name="JitRadio" GroupName="prefEngine" Content="{l:Loc PrefEngineJit}"
-                             FontSize="13.5" Foreground="{StaticResource TextBrush}" Margin="0,3"/>
-                <TextBlock x:Name="EngineNote" Text="{l:Loc PrefEngineNote}" FontSize="11.5"
-                           Foreground="{StaticResource MutedBrush}" Margin="0,6,0,0" TextWrapping="Wrap"/>
-                <Button x:Name="BenchmarkButton" Content="{l:Loc BenchmarkButton}" Height="34"
-                        Style="{StaticResource SecondaryButton}" HorizontalAlignment="Left"
-                        MinWidth="200" Margin="0,12,0,0" Click="Benchmark_Click"/>
-            </StackPanel>
-
-            <!-- Language -->
-            <StackPanel Margin="22,14,22,6">
-                <TextBlock Text="{l:Loc PrefLanguage}" FontSize="11" FontWeight="SemiBold"
-                           Foreground="{StaticResource MutedBrush}" Margin="0,0,0,8"/>
-                <ComboBox x:Name="LanguageCombo" Height="34" FontSize="13.5"
-                          DisplayMemberPath="Name" SelectedValuePath="Code"
-                          SelectionChanged="Language_SelectionChanged"/>
-            </StackPanel>
-
-            <!-- Buttons -->
-            <Border BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,1,0,0" Margin="0,14,0,0">
+            <!-- Footer buttons -->
+            <Border DockPanel.Dock="Bottom" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,1,0,0">
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="22,14,22,16">
                     <Button Content="{l:Loc Cancel}" Width="110" Height="34"
                             Style="{StaticResource SecondaryButton}" Margin="0,0,10,0" Click="Cancel_Click"/>
@@ -54,6 +31,69 @@
                             Style="{StaticResource PrimaryButton}" Click="Save_Click" IsDefault="True"/>
                 </StackPanel>
             </Border>
-        </StackPanel>
+
+            <!-- Body -->
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <StackPanel Margin="22,16,22,10">
+
+                    <!-- Drives -->
+                    <TextBlock Text="{l:Loc DrivesToIndex}" FontSize="11" FontWeight="SemiBold"
+                               Foreground="{StaticResource MutedBrush}" Margin="0,0,0,8"/>
+                    <Border Background="{StaticResource BackgroundBrush}" CornerRadius="7"
+                            BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" Padding="10,8">
+                        <ScrollViewer MaxHeight="160" VerticalScrollBarVisibility="Auto">
+                            <ItemsControl x:Name="DrivesList">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <CheckBox IsChecked="{Binding IsSelected}" Content="{Binding Label}"
+                                                  Foreground="{StaticResource TextBrush}" FontSize="12.5"
+                                                  Margin="0,3" VerticalContentAlignment="Center"/>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </Border>
+
+                    <!-- Admin status / restart -->
+                    <TextBlock x:Name="AdminText" FontSize="11.5" Foreground="{StaticResource MutedBrush}"
+                               Margin="2,8,0,0" TextWrapping="Wrap"/>
+                    <Button x:Name="RestartAdminButton" Content="{l:Loc RestartAsAdmin}" Height="32"
+                            Style="{StaticResource SecondaryButton}" HorizontalAlignment="Left"
+                            Margin="0,8,0,0" Click="RestartAdmin_Click" Visibility="Collapsed"/>
+
+                    <!-- Index actions -->
+                    <StackPanel Orientation="Horizontal" Margin="0,14,0,0">
+                        <Button x:Name="BuildButton" Content="{l:Loc BuildIndex}" Height="36" MinWidth="150"
+                                Style="{StaticResource PrimaryButton}" Margin="0,0,10,0" Click="Build_Click"/>
+                        <Button Content="{l:Loc ClearIndex}" Height="36" MinWidth="130"
+                                Style="{StaticResource SecondaryButton}" Click="Clear_Click"/>
+                    </StackPanel>
+
+                    <Border Height="1" Background="{StaticResource BorderBrush}" Margin="0,18,0,14"/>
+
+                    <!-- Default engine -->
+                    <TextBlock Text="{l:Loc PrefDefaultEngine}" FontSize="11" FontWeight="SemiBold"
+                               Foreground="{StaticResource MutedBrush}" Margin="0,0,0,8"/>
+                    <RadioButton x:Name="MasmRadio" GroupName="prefEngine" Content="{l:Loc PrefEngineMasm}"
+                                 FontSize="13.5" Foreground="{StaticResource TextBrush}" Margin="0,3"/>
+                    <RadioButton x:Name="JitRadio" GroupName="prefEngine" Content="{l:Loc PrefEngineJit}"
+                                 FontSize="13.5" Foreground="{StaticResource TextBrush}" Margin="0,3"/>
+                    <TextBlock Text="{l:Loc PrefEngineNote}" FontSize="11.5"
+                               Foreground="{StaticResource MutedBrush}" Margin="0,6,0,0" TextWrapping="Wrap"/>
+                    <Button x:Name="BenchmarkButton" Content="{l:Loc BenchmarkButton}" Height="34"
+                            Style="{StaticResource SecondaryButton}" HorizontalAlignment="Left"
+                            MinWidth="200" Margin="0,12,0,0" Click="Benchmark_Click"/>
+
+                    <Border Height="1" Background="{StaticResource BorderBrush}" Margin="0,18,0,14"/>
+
+                    <!-- Language -->
+                    <TextBlock Text="{l:Loc PrefLanguage}" FontSize="11" FontWeight="SemiBold"
+                               Foreground="{StaticResource MutedBrush}" Margin="0,0,0,8"/>
+                    <ComboBox x:Name="LanguageCombo" Height="34" FontSize="13.5" HorizontalAlignment="Left"
+                              MinWidth="220" DisplayMemberPath="Name" SelectedValuePath="Code"
+                              SelectionChanged="Language_SelectionChanged"/>
+                </StackPanel>
+            </ScrollViewer>
+        </DockPanel>
     </Border>
 </Window>
