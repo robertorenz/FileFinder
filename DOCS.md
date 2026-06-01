@@ -174,6 +174,7 @@ You can delete either safely; the app rebuilds/recreates them.
 
 | Shortcut | Action |
 |---|---|
+| `F1` | Documentation |
 | `Ctrl+,` | Settings |
 | `Ctrl+I` | Index Statistics |
 | `Ctrl+B` | Benchmark JIT vs MASM |

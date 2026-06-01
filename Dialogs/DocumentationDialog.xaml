@@ -4,7 +4,7 @@
         xmlns:l="clr-namespace:FileFinder.Localization"
         Title="{l:Loc MenuDocumentation}"
         Width="920" Height="680" MinWidth="640" MinHeight="420"
-        Icon="FileFinder.ico"
+        Icon="/FileFinder.ico"
         Background="{StaticResource BackgroundBrush}"
         FontFamily="Segoe UI"
         WindowStartupLocation="CenterOwner">

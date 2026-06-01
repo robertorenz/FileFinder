@@ -22,6 +22,7 @@
         <KeyBinding Modifiers="Control" Key="I" Command="{Binding ShowStatisticsCommand}"/>
         <KeyBinding Modifiers="Control" Key="B" Command="{Binding BenchmarkCommand}"/>
         <KeyBinding Modifiers="Control" Key="OemComma" Command="{Binding PreferencesCommand}"/>
+        <KeyBinding Key="F1" Command="{Binding DocumentationCommand}"/>
     </Window.InputBindings>
 
     <Window.Resources>
