@@ -68,6 +68,7 @@ public sealed class FileIndex
             return (new List<int>(), 0);
 
         byte[] needle = Encoding.UTF8.GetBytes(query.ToLowerInvariant());
+        bool glob = WildcardMatcher.HasWildcard(query);
 
         int partitions = Math.Max(1, Environment.ProcessorCount);
         var local = new List<int>[partitions];
@@ -88,7 +89,10 @@ public sealed class FileIndex
                 {
                     int start = off[i];
                     int len = off[i + 1] - start;
-                    if (SimdSearch.Contains(blob, start, len, nd, needle.Length))
+                    bool hit = glob
+                        ? WildcardMatcher.Match(blob + start, len, nd, needle.Length)
+                        : SimdSearch.Contains(blob, start, len, nd, needle.Length);
+                    if (hit)
                     {
                         counts[pIdx]++;
                         if (list.Count < limit)

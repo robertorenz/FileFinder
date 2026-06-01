@@ -99,7 +99,7 @@
                             <Grid Grid.Column="1">
                                 <TextBox x:Name="SearchInput" Style="{StaticResource SearchBox}"
                                          Text="{Binding Query, UpdateSourceTrigger=PropertyChanged, Delay=0}"/>
-                                <TextBlock Text="Search file names…  (results appear as you type)"
+                                <TextBlock Text="Search file names…  (try *.gif, report*, or any text)"
                                            Foreground="{StaticResource MutedBrush}" FontSize="15"
                                            VerticalAlignment="Center" IsHitTestVisible="False">
                                     <TextBlock.Style>
