@@ -15,6 +15,10 @@ public sealed class FileRow
     public string ModifiedText { get; private set; } = "";
     public string AttributesText { get; private set; } = "";
 
+    // Raw values used for correct (numeric / chronological) column sorting.
+    public long SizeBytes { get; private set; }
+    public DateTime ModifiedRaw { get; private set; }
+
     /// <summary>Reads size / modified / attributes from disk. Safe on missing files.</summary>
     public void LoadMetadata()
     {
@@ -22,6 +26,8 @@ public sealed class FileRow
         {
             var fi = new FileInfo(FullPath);
             if (!fi.Exists) return;
+            SizeBytes = fi.Length;
+            ModifiedRaw = fi.LastWriteTime;
             SizeText = HumanSize(fi.Length);
             ModifiedText = fi.LastWriteTime.ToString("g");
             AttributesText = FormatAttributes(fi.Attributes);

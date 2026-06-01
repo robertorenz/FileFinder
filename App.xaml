@@ -153,14 +153,46 @@
 
             <Style TargetType="DataGridColumnHeader">
                 <Setter Property="Background" Value="{StaticResource SurfaceBrush}"/>
-                <Setter Property="Foreground" Value="{StaticResource MutedBrush}"/>
-                <Setter Property="FontWeight" Value="SemiBold"/>
+                <Setter Property="Foreground" Value="{StaticResource TextBrush}"/>
+                <Setter Property="FontWeight" Value="Bold"/>
                 <Setter Property="FontSize" Value="12"/>
                 <Setter Property="Padding" Value="14,10"/>
-                <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}"/>
-                <Setter Property="BorderThickness" Value="0,0,0,1"/>
                 <Setter Property="HorizontalContentAlignment" Value="Left"/>
                 <Setter Property="SeparatorVisibility" Value="Collapsed"/>
+                <Setter Property="Cursor" Value="Hand"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="DataGridColumnHeader">
+                            <Border Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}"
+                                    BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <ContentPresenter Grid.Column="0" VerticalAlignment="Center"
+                                                      HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"/>
+                                    <TextBlock x:Name="SortArrow" Grid.Column="1" Margin="6,0,0,0"
+                                               VerticalAlignment="Center" FontSize="10" FontWeight="Bold"
+                                               Foreground="{StaticResource PrimaryBrush}" Visibility="Collapsed"/>
+                                </Grid>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="SortDirection" Value="Ascending">
+                                    <Setter TargetName="SortArrow" Property="Text" Value="▲"/>
+                                    <Setter TargetName="SortArrow" Property="Visibility" Value="Visible"/>
+                                </Trigger>
+                                <Trigger Property="SortDirection" Value="Descending">
+                                    <Setter TargetName="SortArrow" Property="Text" Value="▼"/>
+                                    <Setter TargetName="SortArrow" Property="Visibility" Value="Visible"/>
+                                </Trigger>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter Property="Foreground" Value="{StaticResource PrimaryBrush}"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
             </Style>
 
             <!-- Whole-row hover + selection; no per-cell boxes or gridlines -->
