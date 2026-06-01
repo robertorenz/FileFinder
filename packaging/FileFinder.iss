@@ -6,7 +6,7 @@
 ;     -p:EnableCompressionInSingleFile=true -p:DebugType=none -o ..\..\publish
 
 #define AppName "FileFinder"
-#define AppVersion "1.0.7"
+#define AppVersion "1.0.8"
 #define AppPublisher "Roberto Renz"
 #define AppExe "FileFinder.exe"
 
