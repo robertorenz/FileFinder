@@ -14,7 +14,7 @@ milliseconds.
 
 Grab the latest build from the [**Releases**](https://github.com/robertorenz/FileFinder/releases/latest) page:
 
-- **`FileFinder-Setup-1.0.19.exe`** — installer (Start Menu + optional desktop shortcut, uninstaller). Installs per-user without admin, or all-users with admin.
+- **`FileFinder-Setup-1.0.20.exe`** — installer (Start Menu + optional desktop shortcut, uninstaller). Installs per-user without admin, or all-users with admin.
 - **`FileFinder.exe`** — portable single file. No install, no .NET runtime required — just download and run.
 
 ## Highlights

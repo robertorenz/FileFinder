@@ -107,6 +107,13 @@ internal static class SelfTest
         Check("file metadata: size populated", metaRow.SizeText.Length > 0);
         Check("file metadata: modified populated", metaRow.ModifiedText.Length > 0);
         try { File.Delete(metaTmp); } catch { }
+
+        // ---- in-app documentation renders without errors ----
+        int docBlocks = 0;
+        bool docOk = true;
+        try { docBlocks = FileFinder.Dialogs.DocumentationDialog.RenderAllSectionsForTest(); }
+        catch (Exception ex) { docOk = false; Console.WriteLine("  doc render threw: " + ex.Message); }
+        Check($"documentation renders ({docBlocks} blocks)", docOk && docBlocks > 0);
         Check("single char 'a' broad", index.Search("a", 100).total >= 4);
         Check("limit caps hits but not total", index.Search("a", 2).hits.Count == 2);
 

@@ -23,7 +23,7 @@
     <ServerGarbageCollection>true</ServerGarbageCollection>
     <ConcurrentGarbageCollection>true</ConcurrentGarbageCollection>
 
-    <Version>1.0.19</Version>
+    <Version>1.0.20</Version>
 
     <!-- WPF owns the DPI settings in app.manifest; ignore the WinForms DPI analyzer. -->
     <NoWarn>$(NoWarn);WFO0003</NoWarn>
@@ -40,6 +40,8 @@
   <!-- Window icon (referenced as a WPF resource by MainWindow) -->
   <ItemGroup>
     <Resource Include="FileFinder.ico" />
+    <!-- Bundle the docs so Help → Documentation works offline -->
+    <Resource Include="DOCS.md" />
   </ItemGroup>
 
   <!-- Avoid the WinForms implicit global using clashing with WPF (Application,

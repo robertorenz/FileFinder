@@ -22,6 +22,7 @@ internal static class Strings
         ["MenuBenchmark"] = "Benchmark JIT vs MASM…",
         ["MenuHelp"] = "_Help",
         ["MenuDocumentation"] = "Documentation",
+        ["DocsOpenInBrowser"] = "Open in browser",
         ["MenuAbout"] = "About FileFinder",
 
         // Sidebar
@@ -175,6 +176,7 @@ internal static class Strings
         ["MenuBenchmark"] = "Comparar JIT vs MASM…",
         ["MenuHelp"] = "A_yuda",
         ["MenuDocumentation"] = "Documentación",
+        ["DocsOpenInBrowser"] = "Abrir en el navegador",
         ["MenuAbout"] = "Acerca de FileFinder",
 
         // Sidebar
