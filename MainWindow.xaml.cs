@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -28,5 +29,21 @@ public partial class MainWindow : Window
         }
     }
 
-    private void Exit_Click(object sender, RoutedEventArgs e) => Application.Current.Shutdown();
+    private void Exit_Click(object sender, RoutedEventArgs e)
+    {
+        if (Application.Current is App app) app.ExitApplication();
+        else Application.Current.Shutdown();
+    }
+
+    // Closing the window hides it to the tray; the app keeps running so the
+    // in-memory index stays warm. Real exit comes from the tray menu / File → Exit.
+    protected override void OnClosing(CancelEventArgs e)
+    {
+        if (!App.ReallyExit && Application.Current is App app)
+        {
+            e.Cancel = true;
+            app.HideToTray();
+        }
+        base.OnClosing(e);
+    }
 }
