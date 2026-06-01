@@ -11,7 +11,12 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
-        Loaded += (_, _) => SearchInput.Focus();
+        Loaded += async (_, _) =>
+        {
+            SearchInput.Focus();
+            if (DataContext is MainViewModel vm)
+                await vm.InitializeAsync();
+        };
     }
 
     private void ResultsGrid_MouseDoubleClick(object sender, MouseButtonEventArgs e)

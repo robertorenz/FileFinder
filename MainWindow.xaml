@@ -105,20 +105,25 @@
         <!-- ============ Status / progress bar ============ -->
         <Border DockPanel.Dock="Bottom" Background="{StaticResource SurfaceBrush}"
                 BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,1,0,0"
-                Padding="24,0" Height="40">
+                Padding="24,0" Height="44">
             <Grid>
-                <TextBlock Text="{Binding StatusText}" VerticalAlignment="Center"
-                           Foreground="{StaticResource MutedBrush}" FontSize="12"/>
-                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center"
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Grid.Column="0" Text="{Binding StatusText}" VerticalAlignment="Center"
+                           Foreground="{StaticResource MutedBrush}" FontSize="12"
+                           TextTrimming="CharacterEllipsis" Margin="0,0,16,0"/>
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center"
                             Visibility="{Binding IsIndexing, Converter={StaticResource BoolToVis}}">
-                    <ProgressBar Width="180" Height="6" VerticalAlignment="Center"
+                    <ProgressBar Width="150" Height="6" VerticalAlignment="Center"
                                  Background="{StaticResource BackgroundBrush}"
                                  Foreground="{StaticResource PrimaryBrush}" BorderThickness="0"
                                  IsIndeterminate="{Binding IsIndeterminate}"
                                  Value="{Binding ProgressValue}" Maximum="100"/>
-                    <Button Content="{l:Loc CancelIndexing}" Height="26" Padding="10,0" Margin="12,0,0,0"
-                            FontSize="11.5" Style="{StaticResource SecondaryButton}"
-                            Command="{Binding CancelCommand}"/>
+                    <Button Content="{l:Loc CancelIndexing}" Padding="12,5" Margin="14,0,0,0"
+                            FontSize="11.5" VerticalAlignment="Center"
+                            Style="{StaticResource SecondaryButton}" Command="{Binding CancelCommand}"/>
                 </StackPanel>
             </Grid>
         </Border>

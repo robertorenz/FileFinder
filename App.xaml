@@ -43,11 +43,12 @@
                 <Setter Property="FontWeight" Value="SemiBold"/>
                 <Setter Property="Cursor" Value="Hand"/>
                 <Setter Property="SnapsToDevicePixels" Value="True"/>
+                <Setter Property="Padding" Value="14,8"/>
                 <Setter Property="Template">
                     <Setter.Value>
                         <ControlTemplate TargetType="Button">
                             <Border x:Name="bd" Background="{TemplateBinding Background}"
-                                    CornerRadius="7" Padding="14,8">
+                                    CornerRadius="7" Padding="{TemplateBinding Padding}">
                                 <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Border>
                             <ControlTemplate.Triggers>
@@ -70,12 +71,13 @@
                 <Setter Property="FontSize" Value="13"/>
                 <Setter Property="FontWeight" Value="SemiBold"/>
                 <Setter Property="Cursor" Value="Hand"/>
+                <Setter Property="Padding" Value="14,8"/>
                 <Setter Property="Template">
                     <Setter.Value>
                         <ControlTemplate TargetType="Button">
                             <Border x:Name="bd" Background="{TemplateBinding Background}"
                                     BorderBrush="{StaticResource BorderBrush}" BorderThickness="1"
-                                    CornerRadius="7" Padding="14,8">
+                                    CornerRadius="7" Padding="{TemplateBinding Padding}">
                                 <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Border>
                             <ControlTemplate.Triggers>

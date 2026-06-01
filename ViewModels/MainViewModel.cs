@@ -69,7 +69,17 @@ public sealed class MainViewModel : ObservableObject
         };
 
         LoadDrives();
-        _ = LoadCachedIndexAsync();
+    }
+
+    /// <summary>
+    /// Called once the main window is shown: loads any cached index, and if there
+    /// is none, opens Preferences so the user can pick drives and build one.
+    /// </summary>
+    public async Task InitializeAsync()
+    {
+        await LoadCachedIndexAsync();
+        if (_index == null && !IsIndexing)
+            ShowPreferences();
     }
 
     private void ShowPreferences()
