@@ -55,6 +55,12 @@ public sealed class IndexBuilder
         _lowerLen += written;
 
         _count++;
+
+        // Keep the terminator slot live after every Add so Merge can safely read
+        // _nameOff[_count] / _lowerOff[_count] for the last element. EnsureCount
+        // reserves room for this extra slot (+1). Build() re-writes it harmlessly.
+        _nameOff[_count] = _nameLen;
+        _lowerOff[_count] = _lowerLen;
     }
 
     /// <summary>Appends another builder's contents into this one, remapping dir ids.</summary>
@@ -95,6 +101,10 @@ public sealed class IndexBuilder
 
             _count++;
         }
+
+        // Maintain the terminator slot (see Add) so this builder stays mergeable.
+        _nameOff[_count] = _nameLen;
+        _lowerOff[_count] = _lowerLen;
     }
 
     public FileIndex Build(string[] drives, DateTime builtUtc)

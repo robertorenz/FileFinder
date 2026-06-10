@@ -23,7 +23,7 @@
     <ServerGarbageCollection>true</ServerGarbageCollection>
     <ConcurrentGarbageCollection>true</ConcurrentGarbageCollection>
 
-    <Version>1.0.22</Version>
+    <Version>1.0.23</Version>
 
     <!-- WPF owns the DPI settings in app.manifest; ignore the WinForms DPI analyzer. -->
     <NoWarn>$(NoWarn);WFO0003</NoWarn>
